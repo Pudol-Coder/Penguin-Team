@@ -10,11 +10,11 @@
             font-family: 'NanumSquare', sans-serif;
             background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
             color: #2c3e50;
-            display: flex; /* 전체를 가로로 나열 */
-            overflow: hidden;
+            display: flex;
+            overflow: hidden; /* 🐧 펭귄이 삐져나온 부분을 깔끔하게 잘라줍니다 */
         }
 
-        /* 🟦 [1번 칸] 왼쪽 메뉴 (고정 폭) */
+        /* [1번 칸] 메뉴 바 */
         nav {
             width: 260px;
             background: rgba(255, 255, 255, 0.7);
@@ -36,23 +36,23 @@
         .btn:hover { transform: translateY(-2px); color: #3498db; }
         .login-btn { margin-top: auto; background: #5865F2; color: white !important; text-align: center; }
 
-        /* ⬜ 메인 컨테이너 (2번 + 3번 칸을 포함) */
+        /* [메인 컨테이너] */
         .main-container {
             flex: 1;
-            display: flex; /* 2번과 3번을 가로로 배치 */
+            display: flex;
             align-items: center;
+            position: relative; /* 🐧 펭귄 배치를 위한 기준점 */
         }
 
-        /* 🟨 [2번 칸] 글자 영역 */
+        /* [2번 칸] 글자 영역 */
         .text-section {
-            flex: 1.5; /* 3번 칸보다 조금 더 넓게 */
-            padding-left: 60px;
+            padding-left: 80px;
+            z-index: 5;
             animation: fadeIn 1s ease-out;
         }
 
         .text-section h1 {
             font-size: 4.5rem;
-            color: #2c3e50;
             margin: 0;
             letter-spacing: -1px;
         }
@@ -63,40 +63,46 @@
             padding: 8px 25px; border-radius: 30px;
         }
 
-        /* 🟦 [3번 칸] 펭귄 사진 영역 (가장 오른쪽) */
-        .image-section {
-            flex: 1; 
-            display: flex;
-            justify-content: center; /* 3번째 칸 안에서 중앙 정렬 */
-            align-items: center;
-            animation: fadeInRight 1.2s ease-out;
+        /* 🐧 [3번 칸] 오른쪽 빼꼼 펭귄 영역 */
+        .peekaboo-penguin {
+            position: absolute;
+            right: -100px; /* 👈 요기! 사진의 일부를 화면 밖으로 밀어냅니다 */
+            bottom: 50px; /* 위치를 위아래로 조절 가능 */
+            animation: peek 1.5s ease-out;
+            transition: right 0.3s ease; /* 마우스 올리면 더 나오게 하기 위해 */
         }
 
         .penguin-logo {
-            width: 300px; /* 3번째 칸을 든든하게 채우는 크기 */
+            width: 450px; /* 빼꼼하니까 좀 더 크게! */
             height: auto;
-            filter: drop-shadow(0 15px 30px rgba(0,0,0,0.15));
-            transition: transform 0.3s ease;
+            filter: drop-shadow(-10px 10px 20px rgba(0,0,0,0.1));
+            /* 🐧 펭귄이 살짝 기울어져서 쳐다보는 느낌 */
+            transform: rotate(-5deg);
         }
-        
-        .penguin-logo:hover { transform: scale(1.05) rotate(5deg); }
 
-        /* 애니메이션 설정 */
+        /* 🐧 마우스 갖다대면 펭귄이 좀 더 튀어나옴! ㅋㅋ */
+        .peekaboo-penguin:hover {
+            right: -20px;
+            cursor: pointer;
+        }
+
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        @keyframes fadeInRight {
-            from { opacity: 0; transform: translateX(50px); }
-            to { opacity: 1; transform: translateX(0); }
+
+        /* 빼꼼 나타나는 애니메이션 */
+        @keyframes peek {
+            from { right: -300px; opacity: 0; }
+            to { right: -100px; opacity: 1; }
         }
 
-        /* 반응형 (화면 좁을 때) */
-        @media (max-width: 1024px) {
-            .main-container { flex-direction: column; text-align: center; }
-            .text-section { padding-left: 0; padding-top: 50px; }
-            .image-section { padding: 40px 0; }
-            .penguin-logo { width: 200px; }
+        /* 모바일 대응 */
+        @media (max-width: 768px) {
+            .peekaboo-penguin { right: -50px; bottom: 0; }
+            .penguin-logo { width: 250px; }
+            .text-section { padding-left: 30px; }
+            .text-section h1 { font-size: 3rem; }
         }
     </style>
 </head>
@@ -105,8 +111,8 @@
     <nav>
         <h2>🧊 PENGUIN TEAM</h2>
         <div style="display: flex; flex-direction: column; gap: 10px;">
-            <button class="btn" onclick="showChatModal()">📱 디스코드 원격 채팅</button>
-            <button class="btn" onclick="alert('펭귄팀 소개입니다!')">🐧 소개</button>
+            <button class="btn" onclick="alert('전송 모달!')">📱 디스코드 원격 채팅</button>
+            <button class="btn" onclick="alert('펭귄팀 소개')">🐧 소개</button>
         </div>
         <button class="btn login-btn" onclick="alert('로그인!')">디스코드 로그인</button>
     </nav>
@@ -118,22 +124,16 @@
             <div class="subtitle">세상에서 가장 귀엽고(?) 똑똑한 우리들의 집합소 ❄️</div>
             <p style="margin-top: 30px; color: #7f8c8d; font-size: 1.1rem; line-height: 1.6; max-width: 500px;">
                 이곳은 펭귄팀 멤버분들을 위한 대시보드입니다.<br>
-                로그인 후 디스코드 원격 채팅 기능을 이용해 보세요.<br>
-                반가워요, 리프섭 펭귄팀 여러분! 🐧✨
+                반가워요, 리프섭 펭귄팀 여러분!<br>
+                <b>오른쪽을 보세요. 펭귄이 지켜보고 있습니다... 🐧</b>
             </p>
         </section>
 
-        <section class="image-section">
+        <div class="peekaboo-penguin">
             <img src="Penguin_Logo_1.png" alt="Penguin Logo" class="penguin-logo">
-        </section>
+        </div>
 
     </div>
-
-    <script>
-        function showChatModal() {
-            alert('이제 다음 단계에서 이 버튼을 누르면 멋진 전송창이 뜨게 할 거예요! ㅋㅋ');
-        }
-    </script>
 
 </body>
 </html>
