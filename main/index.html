@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>리프섭 펭귄팀</title>
     <style>
-        /* 기본 설정 및 시원한 블루 그라데이션 */
         body, html {
             margin: 0;
             padding: 0;
@@ -13,11 +12,11 @@
             font-family: 'NanumSquare', sans-serif;
             background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
             color: #2c3e50;
-            display: flex;
+            display: flex; /* 가로로 배치: [메뉴 | 콘텐츠] */
             overflow: hidden;
         }
 
-        /* 왼쪽 사이드바 메뉴 */
+        /* 1번 칸: 왼쪽 사이드바 */
         nav {
             width: 260px;
             background: rgba(255, 255, 255, 0.7);
@@ -27,114 +26,68 @@
             flex-direction: column;
             border-right: 1px solid rgba(255, 255, 255, 0.5);
             box-shadow: 5px 0 15px rgba(0,0,0,0.05);
-            z-index: 10;
+            flex-shrink: 0; /* 크기 고정 */
         }
 
-        nav h2 {
-            font-size: 1.4rem;
-            color: #34495e;
-            margin-bottom: 40px;
-            text-align: center;
-            font-weight: 800;
-        }
-
-        .menu-item {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
+        nav h2 { font-size: 1.4rem; color: #34495e; margin-bottom: 40px; text-align: center; font-weight: 800; }
 
         .btn {
-            padding: 14px 20px;
-            border: none;
-            border-radius: 15px;
-            background: white;
-            color: #5d6d7e;
-            font-size: 0.95rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease-in-out;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            text-align: left;
+            padding: 14px 20px; border: none; border-radius: 15px; background: white;
+            color: #5d6d7e; font-size: 0.95rem; font-weight: 600; cursor: pointer;
+            transition: all 0.2s ease; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 12px;
         }
+        .btn:hover { transform: translateY(-2px); color: #3498db; }
+        .login-btn { margin-top: auto; background: #5865F2; color: white !important; text-align: center; }
 
-        .btn:hover {
-            background: #fdfdfd;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
-            color: #3498db;
-        }
-
-        .login-btn {
-            margin-top: auto;
-            background: #5865F2;
-            color: white !important;
-            text-align: center;
-        }
-
-        /* 메인 콘텐츠 영역 레이아웃 수정 */
+        /* 메인 영역: [2번 칸(글자) | 3번 칸(펭귄)] */
         main {
             flex: 1;
-            display: flex;
-            justify-content: center;
+            display: grid;
+            grid-template-columns: 1.2fr 1fr; /* 글자 칸과 펭귄 칸 비율 조절 */
             align-items: center;
-            padding: 40px;
+            padding: 0 80px;
         }
 
-        /* 텍스트와 로고를 가로로 배치 */
-        .hero-section {
-            display: flex;
-            align-items: center;
-            gap: 60px; /* 텍스트와 사진 사이 간격 */
-            animation: fadeIn 1s ease-out;
-            max-width: 1000px;
-        }
-
+        /* 2번 칸: 글자 영역 */
         .text-area {
-            text-align: left; /* 글자는 왼쪽 정렬 */
+            animation: fadeIn 0.8s ease-out;
         }
 
-        .hero-section h1 {
-            font-size: 4.5rem;
-            color: #2c3e50;
-            margin: 0;
-            letter-spacing: -1px;
+        .text-area h1 { font-size: 4.5rem; color: #2c3e50; margin: 0; letter-spacing: -1px; }
+        .subtitle {
+            font-size: 1.2rem; color: #546e7a; margin-top: 15px;
+            background: rgba(255, 255, 255, 0.4); display: inline-block;
+            padding: 8px 25px; border-radius: 30px;
         }
 
-        .hero-section .subtitle {
-            font-size: 1.3rem;
-            color: #546e7a;
-            margin-top: 15px;
-            font-weight: 400;
-            background: rgba(255, 255, 255, 0.4);
-            display: inline-block;
-            padding: 8px 25px;
-            border-radius: 30px;
+        /* 3번 칸: 펭귄 사진 영역 */
+        .image-area {
+            display: flex;
+            justify-content: flex-start; /* 글자 바로 옆에 붙도록 */
+            animation: fadeInRight 1s ease-out;
         }
 
-        /* 🐧 오른쪽에 배치될 펭귄 로고 스타일 */
         .penguin-logo {
-            width: 320px; /* 크기를 좀 더 키웠습니다 */
+            width: 350px; /* 3번째 칸을 꽉 채울 정도의 존재감 */
             height: auto;
-            filter: drop-shadow(0 15px 25px rgba(0,0,0,0.15));
-            transition: transform 0.3s ease;
-        }
-        
-        .penguin-logo:hover {
-            transform: scale(1.05) rotate(2deg); /* 살짝 움직이는 효과 */
+            filter: drop-shadow(0 15px 30px rgba(0,0,0,0.15));
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateX(30px); }
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInRight {
+            from { opacity: 0; transform: translateX(50px); }
             to { opacity: 1; transform: translateX(0); }
         }
 
-        /* 반응형: 화면이 좁아지면 다시 위아래로 */
-        @media (max-width: 1024px) {
-            .hero-section { flex-direction: column; text-align: center; gap: 30px; }
-            .text-area { text-align: center; }
-            .penguin-logo { width: 200px; }
-            .hero-section h1 { font-size: 3rem; }
+        /* 화면 좁아지면 정돈 */
+        @media (max-width: 1100px) {
+            main { grid-template-columns: 1fr; text-align: center; padding: 40px; }
+            .image-area { justify-content: center; margin-top: 30px; }
+            .penguin-logo { width: 250px; }
         }
     </style>
 </head>
@@ -142,30 +95,23 @@
 
     <nav>
         <h2>🧊 PENGUIN TEAM</h2>
-        <div class="menu-item">
-            <button class="btn" onclick="alert('채팅 전송 기능을 구현할 예정입니다!')">📱 디스코드 원격 채팅</button>
-            <button class="btn" onclick="alert('펭귄팀의 비밀 기지 사이트입니다.')">🐧 소개</button>
-            <button class="btn login-btn" onclick="alert('디스코드 인증을 진행합니다.')">디스코드 로그인</button>
-        </div>
+        <button class="btn" onclick="alert('전송 모달!')">📱 디스코드 원격 채팅</button>
+        <button class="btn" onclick="alert('펭귄팀 소개')">🐧 소개</button>
+        <button class="btn login-btn" onclick="alert('로그인!')">디스코드 로그인</button>
     </nav>
 
     <main>
-        <div class="hero-section">
-            <div class="text-area">
-                <h1>펭귄팀!</h1>
-                <div class="subtitle">
-                    세상에서 가장 귀엽고(?) 똑똑한 우리들의 집합소 ❄️
-                </div>
-                <p style="margin-top: 30px; color: #7f8c8d; font-size: 1.1rem; line-height: 1.6;">
-                    이곳은 펭귄팀 멤버분들을 위한 대시보드입니다.<br>
-                    로그인 후 디스코드 원격 채팅 기능을 이용해 보세요.<br>
-                    반가워요, 리프섭 펭귄팀 여러분!
-                </p>
-            </div>
+        <div class="text-area">
+            <h1>펭귄팀!</h1>
+            <div class="subtitle">세상에서 가장 귀엽고(?) 똑똑한 우리들의 집합소 ❄️</div>
+            <p style="margin-top: 30px; color: #7f8c8d; font-size: 1.1rem; line-height: 1.6;">
+                이곳은 펭귄팀 멤버분들을 위한 대시보드입니다.<br>
+                반가워요, 리프섭 펭귄팀 여러분!
+            </p>
+        </div>
 
-            <div class="image-area">
-                <img src="Penguin_Logo_1.png" alt="Penguin Logo" class="penguin-logo">
-            </div>
+        <div class="image-area">
+            <img src="Penguin_Logo_1.png" alt="Penguin Logo" class="penguin-logo">
         </div>
     </main>
 
