@@ -27,6 +27,7 @@
             flex-direction: column;
             border-right: 1px solid rgba(255, 255, 255, 0.5);
             box-shadow: 5px 0 15px rgba(0,0,0,0.05);
+            z-index: 10;
         }
 
         nav h2 {
@@ -37,7 +38,6 @@
             font-weight: 800;
         }
 
-        /* 메뉴 버튼 스타일 */
         .menu-item {
             display: flex;
             flex-direction: column;
@@ -72,27 +72,26 @@
             text-align: center;
         }
 
-        /* 오른쪽 메인 콘텐츠 */
+        /* 메인 콘텐츠 영역 레이아웃 수정 */
         main {
             flex: 1;
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
             padding: 40px;
         }
 
+        /* 텍스트와 로고를 가로로 배치 */
         .hero-section {
-            text-align: center;
+            display: flex;
+            align-items: center;
+            gap: 60px; /* 텍스트와 사진 사이 간격 */
             animation: fadeIn 1s ease-out;
+            max-width: 1000px;
         }
 
-        /* 🐧 펭귄 로고 스타일 추가 */
-        .penguin-logo {
-            width: 200px; /* 크기는 적당히 조절하세요 */
-            height: auto;
-            margin-bottom: 20px;
-            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.1));
+        .text-area {
+            text-align: left; /* 글자는 왼쪽 정렬 */
         }
 
         .hero-section h1 {
@@ -113,17 +112,29 @@
             border-radius: 30px;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+        /* 🐧 오른쪽에 배치될 펭귄 로고 스타일 */
+        .penguin-logo {
+            width: 320px; /* 크기를 좀 더 키웠습니다 */
+            height: auto;
+            filter: drop-shadow(0 15px 25px rgba(0,0,0,0.15));
+            transition: transform 0.3s ease;
+        }
+        
+        .penguin-logo:hover {
+            transform: scale(1.05) rotate(2deg); /* 살짝 움직이는 효과 */
         }
 
-        @media (max-width: 768px) {
-            body { flex-direction: column; overflow: auto; }
-            nav { width: 100%; height: auto; padding: 20px; }
-            main { padding: 60px 20px; }
-            .hero-section h1 { font-size: 2.8rem; }
-            .penguin-logo { width: 150px; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateX(30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        /* 반응형: 화면이 좁아지면 다시 위아래로 */
+        @media (max-width: 1024px) {
+            .hero-section { flex-direction: column; text-align: center; gap: 30px; }
+            .text-area { text-align: center; }
+            .penguin-logo { width: 200px; }
+            .hero-section h1 { font-size: 3rem; }
         }
     </style>
 </head>
@@ -140,16 +151,21 @@
 
     <main>
         <div class="hero-section">
-            <img src="Penguin_Logo_1.png" alt="Penguin Logo" class="penguin-logo">
-            
-            <h1>펭귄팀!</h1>
-            <div class="subtitle">
-                세상에서 가장 귀엽고(?) 똑똑한 우리들의 집합소 ❄️
+            <div class="text-area">
+                <h1>펭귄팀!</h1>
+                <div class="subtitle">
+                    세상에서 가장 귀엽고(?) 똑똑한 우리들의 집합소 ❄️
+                </div>
+                <p style="margin-top: 30px; color: #7f8c8d; font-size: 1.1rem; line-height: 1.6;">
+                    이곳은 펭귄팀 멤버분들을 위한 대시보드입니다.<br>
+                    로그인 후 디스코드 원격 채팅 기능을 이용해 보세요.<br>
+                    반가워요, 리프섭 펭귄팀 여러분!
+                </p>
             </div>
-            <p style="margin-top: 30px; color: #7f8c8d;">
-                이곳은 펭귄팀 멤버분들을 위한 대시보드입니다.<br>
-                로그인 후 디스코드 원격 채팅 기능을 이용해 보세요.
-            </p>
+
+            <div class="image-area">
+                <img src="Penguin_Logo_1.png" alt="Penguin Logo" class="penguin-logo">
+            </div>
         </div>
     </main>
 
