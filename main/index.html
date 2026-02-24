@@ -110,7 +110,7 @@
     // 1. 디스코드 로그인 함수
     function discordLogin() {
         // 🚨 중요: 여기에 본인의 Client ID를 넣으세요!
-        const CLIENT_ID = 'YOUR_CLIENT_ID_HERE'; 
+        const CLIENT_ID = '1475832477862989968'; 
         
         // 🚨 중요: Discord Developer Portal에 등록한 리다이렉트 주소와 똑같아야 합니다.
         const REDIRECT_URI = encodeURIComponent('https://leaf.penguinteam.kro.kr/api/auth');
@@ -155,7 +155,7 @@
             <button class="btn" onclick="alert('전송 모달!')">📱 디스코드 원격 채팅</button>
             <button class="btn" onclick="alert('펭귄팀 소개')">🐧 소개</button>
         </div>
-        <button class="btn login-btn" onclick="alert('로그인!')">디스코드 로그인</button>
+        <button class="btn login-btn" onclick="discordLogin()">디스코드 로그인</button>
     </nav>
 
     <div class="main-container">
