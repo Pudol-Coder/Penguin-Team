@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Penguin Team Dashboard</title>
+    <style>
+        /* 기본 설정 및 시원한 블루 그라데이션 */
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'NanumSquare', sans-serif;
+            background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%); /* 파스텔 블루 그라데이션 */
+            color: #2c3e50;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* 왼쪽 사이드바 메뉴 */
+        nav {
+            width: 260px;
+            background: rgba(255, 255, 255, 0.7); /* 반투명 흰색 */
+            backdrop-filter: blur(15px);
+            padding: 50px 25px;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 5px 0 15px rgba(0,0,0,0.05);
+        }
+
+        nav h2 {
+            font-size: 1.4rem;
+            color: #34495e;
+            margin-bottom: 40px;
+            text-align: center;
+            font-weight: 800;
+        }
+
+        /* 메뉴 버튼 스타일 */
+        .menu-item {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 14px 20px;
+            border: none;
+            border-radius: 15px;
+            background: white;
+            color: #5d6d7e;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            text-align: left;
+        }
+
+        .btn:hover {
+            background: #fdfdfd;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+            color: #3498db;
+        }
+
+        /* 로그인 버튼은 포인트 컬러 */
+        .login-btn {
+            margin-top: auto;
+            background: #5865F2; /* 디스코드 블루 */
+            color: white !important;
+            text-align: center;
+        }
+
+        .login-btn:hover {
+            background: #4752c4;
+            color: white;
+        }
+
+        /* 오른쪽 메인 콘텐츠 */
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+        }
+
+        .hero-section {
+            text-align: center;
+            animation: fadeIn 1s ease-out;
+        }
+
+        .hero-section h1 {
+            font-size: 4.5rem;
+            color: #2c3e50;
+            margin: 0;
+            letter-spacing: -1px;
+        }
+
+        .hero-section .subtitle {
+            font-size: 1.3rem;
+            color: #546e7a;
+            margin-top: 15px;
+            font-weight: 400;
+            background: rgba(255, 255, 255, 0.4);
+            display: inline-block;
+            padding: 8px 25px;
+            border-radius: 30px;
+        }
+
+        /* 애니메이션 */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 모바일 대응 */
+        @media (max-width: 768px) {
+            body { flex-direction: column; overflow: auto; }
+            nav { width: 100%; height: auto; padding: 20px; border-right: none; }
+            main { padding: 60px 20px; }
+            .hero-section h1 { font-size: 2.8rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <h2>🧊 PENGUIN TEAM</h2>
+        <div class="menu-item">
+            <button class="btn" onclick="alert('채팅 전송 모달을 엽니다!')">📱 디스코드 원격 채팅</button>
+            <button class="btn" onclick="alert('펭귄팀의 비밀 기지 사이트입니다.')">🐧 소개</button>
+            <button class="btn login-btn" onclick="alert('디스코드 인증을 진행합니다.')">로그인</button>
+        </div>
+    </nav>
+
+    <main>
+        <div class="hero-section">
+            <h1>펭귄팀!</h1>
+            <div class="subtitle">
+                세상에서 가장 귀엽고 똑똑한 펭귄들의 집합소 ❄️
+            </div>
+            <p style="margin-top: 30px; color: #7f8c8d;">
+                이곳은 펭귄팀 관리자를 위한 대시보드입니다.<br>
+                왼쪽 메뉴를 통해 디스코드에 메시지를 보내거나 팀 정보를 확인하세요.
+            </p>
+        </div>
+    </main>
+
+</body>
+</html>
