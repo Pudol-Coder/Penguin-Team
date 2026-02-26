@@ -1,57 +1,27 @@
-// script.js 상단
-const CLIENT_ID = '1475832477862989968'; 
-// 주소 끝에 슬래시(/)가 있는지, https인지 꼭 확인하세요!
-const REDIRECT_URI = encodeURIComponent('https://leaf.penguinteam.kro.kr/api/auth');
-
-function discordLogin() {
-    const url = `https://discord.com/oauth2/authorize?client_id=1475832477862989968&response_type=code&redirect_uri=https%3A%2F%2Fleaf.penguinteam.kro.kr%2Fapi%2Fauth&scope=identify`;
-    location.href = url;
-}
-
-// 로그아웃 함수
-function logout() {
-    localStorage.removeItem('user');
-    // 서버 로그아웃 API 호출 후 메인으로 이동
-    window.location.href = '/api/logout';
-}
-
-// 페이지 로드 시 상태 체크
+// script.js 로드 시 상태 체크 부분 수정
 window.addEventListener('load', () => {
     const urlParams = new URLSearchParams(window.location.search);
-    
-    // 1. 주소창에서 'access_token'이라는 이름을 찾습니다! 🐧
     const token = urlParams.get('access_token');
+    
+    // 주소창에 유저 정보도 같이 넘어온다고 가정 (API에서 보내줘야 함)
+    const username = urlParams.get('username');
+    const userId = urlParams.get('id');
+    const avatar = urlParams.get('avatar');
 
     if (token) {
-        console.log('성공의 열쇠(토큰) 발견! 🔑');
-        
-        // 일단 "인증 완료" 상태로 UI를 강제로 바꿉니다.
-        const loginBtn = document.getElementById('login-btn');
-        const userInfo = document.getElementById('user-info');
-        const welcomeMsg = document.getElementById('welcome-msg');
-
-        if (loginBtn) loginBtn.style.display = 'none';
-        if (userInfo) userInfo.style.display = 'block';
-        if (welcomeMsg) welcomeMsg.innerText = `🐧 인증 완료! 환영합니다!`;
-
-        // 토큰을 저장해둡니다 (나중에 유저 정보 불러올 때 쓰기 위해)
         localStorage.setItem('discord_token', token);
+        
+        // 유저 객체를 만들어서 저장! 🐧 이 부분이 빠져있었어요.
+        if (username) {
+            const userObj = {
+                username: username,
+                id: userId,
+                avatar: avatar
+            };
+            localStorage.setItem('user', JSON.stringify(userObj));
+        }
 
-        // 주소창의 지저분한 토큰 정보는 싹 지워줍니다 (보안상 좋음!)
+        // ... 나머지 UI 변경 로직 ...
         window.history.replaceState({}, document.title, "/");
     }
 });
-function goToChat() {
-    // 이제 'discord_token'이라는 이름의 열쇠를 찾습니다!
-    const token = localStorage.getItem('discord_token');
-    
-    console.log("확인된 디스코드 토큰:", token);
-
-    if (!token) {
-        alert("🐧 아직 디스코드 토큰을 찾지 못했어요. 로그인을 완료해주세요!");
-        return;
-    }
-    
-    // 열쇠가 있다면 바로 이동!
-    location.href = '/discord/chat/';
-}
