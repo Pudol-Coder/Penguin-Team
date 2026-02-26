@@ -1,13 +1,10 @@
+// script.js 상단
 const CLIENT_ID = '1475832477862989968'; 
+// 주소 끝에 슬래시(/)가 있는지, https인지 꼭 확인하세요!
+const REDIRECT_URI = encodeURIComponent('https://leaf.penguinteam.kro.kr/api/auth');
 
-// 현재 접속한 주소를 기반으로 리다이렉트 주소를 자동 생성합니다. (kro.kr이든 vercel.app이든 OK!)
-const currentOrigin = window.location.origin;
-const REDIRECT_URI = encodeURIComponent(`${currentOrigin}/api/auth`);
-
-// 디스코드 로그인 함수
 function discordLogin() {
     const url = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=identify`;
-    console.log("로그인 시도 주소:", url);
     location.href = url;
 }
 
