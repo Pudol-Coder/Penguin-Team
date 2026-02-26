@@ -30,16 +30,13 @@
         }
 
         .msg-box { display: flex; gap: 15px; animation: fadeIn 0.3s ease; }
-        .avatar { width: 40px; height: 40px; border-radius: 50%; background: #5865F2; }
+        .avatar { width: 40px; height: 40px; border-radius: 50%; background: #5865F2; object-fit: cover; }
         .msg-content { display: flex; flex-direction: column; }
         .user-name { font-weight: bold; font-size: 0.95rem; color: #ffffff; margin-bottom: 4px; }
         .text { font-size: 0.9rem; line-height: 1.4; color: #dbdee1; }
 
         /* 하단 입력창 */
-        .input-area {
-            padding: 20px; background: #313338;
-        }
-
+        .input-area { padding: 20px; background: #313338; }
         .input-wrapper {
             background: #383a40; border-radius: 8px;
             padding: 10px 15px; display: flex; align-items: center; gap: 10px;
@@ -69,10 +66,10 @@
 
 <div id="chat-log">
     <div class="msg-box">
-        <div class="avatar" style="background-image: url('https://cdn-icons-png.flaticon.com/512/3588/3588612.png'); background-size: cover;"></div>
+        <img src="https://cdn-icons-png.flaticon.com/512/3588/3588612.png" class="avatar">
         <div class="msg-content">
             <span class="user-name">시스템 펭귄 🐧</span>
-            <span class="text">로그인 후 메시지를 입력하면 디스코드 서버로 공지가 전송됩니다!</span>
+            <span class="text">채팅을 불러오는 중입니다... 잠시만 기다려주세요!</span>
         </div>
     </div>
 </div>
@@ -85,54 +82,46 @@
 </div>
 
 <script>
-    // discord/chat/index.html 상단 <script>
+    let lastMessageId = null;
+
+    // 1. 페이지 로드 시 로그인 체크
     window.onload = () => {
         const token = localStorage.getItem('discord_token');
         if (!token) {
             alert("🚨 로그인한 펭귄만 들어올 수 있습니다!");
-            location.href = "/"; // 메인으로 쫓아내기
+            location.href = "/";
+            return;
         }
+        fetchChat(); // 첫 로드 시 채팅 불러오기
     };
-    // ⚠️ 보안을 위해 실제 서비스 시에는 백엔드 처리가 필요하지만, 일단 테스트용으로 직접 넣습니다.
-    const WEBHOOK_URL = '{DISCORD_WEBHOOK_CHAT_URL}';
 
     function handleEnter(e) {
         if (e.key === 'Enter') sendNotice();
     }
 
+    // 2. 메시지 전송 함수
     async function sendNotice() {
         const input = document.getElementById('msg-input');
         const text = input.value.trim();
-        
-        // 1. 저장된 데이터 싹 뒤져보기
         const token = localStorage.getItem('discord_token');
-        const rawUserData = localStorage.getItem('user'); // script.js에서 저장한 이름
-        
-        console.log("저장된 유저 데이터 원본:", rawUserData); // F12 콘솔 확인용
-    
+        const rawUserData = localStorage.getItem('user');
+
         if (!text) return;
-    
-        // 2. 유저 정보가 있는지 꼼꼼하게 검사
+
         let userData = null;
-        if (rawUserData && rawUserData !== "undefined") {
-            try {
-                userData = JSON.parse(rawUserData);
-            } catch (e) {
-                console.error("데이터 파싱 에러:", e);
-            }
-        }
-    
+        try {
+            userData = JSON.parse(rawUserData);
+        } catch (e) { console.error(e); }
+
         if (!userData || !token) {
-            alert("🐧 펭귄 요원: 유저 정보를 찾을 수 없어요! 메인에서 다시 로그인해 주세요.");
+            alert("유저 정보를 찾을 수 없습니다. 다시 로그인 해주세요!");
             return;
         }
-    
-        // 3. 디스코드로 닉네임과 프사 전송
-        // 만약 프사가 없으면 기본 펭귄 아이콘을 씁니다.
+
         const userAvatar = userData.avatar 
             ? `https://cdn.discordapp.com/avatars/${userData.id}/${userData.avatar}.png`
             : 'https://cdn-icons-png.flaticon.com/512/3588/3588612.png';
-    
+
         try {
             const response = await fetch('/api/send-chat', {
                 method: 'POST',
@@ -143,20 +132,44 @@
                     content: text
                 })
             });
-    
+
             if (response.ok) {
-                addMessageToUI(userData.username, text, userAvatar);
                 input.value = '';
-            } else {
-                alert("전송 실패! 서버 설정을 확인하세요.");
+                await fetchChat(); // 전송 후 즉시 갱신
             }
         } catch (err) {
-            console.error("네트워크 에러:", err);
+            console.error("전송 에러:", err);
         }
-    }    
+    }
+
+    // 3. 채팅 불러오기 함수 (중요!)
+    async function fetchChat() {
+        try {
+            const response = await fetch('/api/get-chat');
+            const messages = await response.json();
+            
+            const chatLog = document.getElementById('chat-log');
+
+            if (!chatLog) return;
+
+            // 마지막 메시지 ID가 달라졌을 때만 화면 갱신
+            if (messages.length > 0 && messages[messages.length - 1].id !== lastMessageId) {
+                chatLog.innerHTML = ''; // 싹 비우기
+                messages.forEach(msg => {
+                    addMessageToUI(msg.username, msg.content, msg.avatar);
+                });
+                lastMessageId = messages[messages.length - 1].id;
+                chatLog.scrollTop = chatLog.scrollHeight;
+            }
+        } catch (err) {
+            console.error("채팅 로딩 실패:", err);
+        }
+    }
+
+    // 4. 화면에 메시지 추가 (통일된 UI 구조)
     function addMessageToUI(name, msg, img) {
         const log = document.getElementById('chat-log');
-        const html = `
+        const msgHtml = `
             <div class="msg-box">
                 <img src="${img}" class="avatar" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3588/3588612.png'">
                 <div class="msg-content">
@@ -165,40 +178,11 @@
                 </div>
             </div>
         `;
-        log.innerHTML += html;
-        log.scrollTop = log.scrollHeight; // 스크롤 맨 아래로
-    }
-    let lastMessageId = null;
-
-    async function fetchChat() {
-        try {
-            const response = await fetch('/api/get-chat');
-            const messages = await response.json();
-            
-            const chatBox = document.getElementById('chat-box'); // 채팅창 ID 확인!
-
-            // 마지막 메시지 ID가 달라졌을 때만 화면 갱신 (반짝임 방지)
-            if (messages.length > 0 && messages[messages.length - 1].id !== lastMessageId) {
-                chatBox.innerHTML = ''; // 싹 비우고 다시 그리기
-                messages.forEach(msg => {
-                    addMessageToUI(msg.username, msg.content, msg.avatar);
-                });
-                lastMessageId = messages[messages.length - 1].id;
-                
-                // 스크롤 맨 아래로
-                chatBox.scrollTop = chatBox.scrollHeight;
-            }
-        } catch (err) {
-            console.error("채팅 로딩 실패:", err);
-        }
+        log.innerHTML += msgHtml;
     }
 
-    // 5초마다 실행! 🐧✨
+    // 5초마다 실시간 확인 🐧✨
     setInterval(fetchChat, 5000);
-    window.addEventListener('load', fetchChat);
-    
-    // 5초마다 확인 (서버 부담 거의 없음)
-    setInterval(refreshChat, 5000);
 </script>
 
 </body>
