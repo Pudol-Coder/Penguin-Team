@@ -42,10 +42,10 @@ window.addEventListener('load', () => {
     }
 });
 function goToChat() {
-    const user = localStorage.getItem('user');
+    const user = localStorage.getItem('access_token');
     
-    if (!user) {
-        alert("🐧 펭귄 요원: 먼저 로그인을 해주셔야 채팅 기능을 사용할 수 있어요!");
+    if (!access_token) {
+        alert("🐧 먼저 로그인을 해주셔야 채팅 기능을 사용할 수 있어요!");
         // 로그인 버튼이 있는 곳으로 스크롤하거나 로그인 유도
         return;
     }
