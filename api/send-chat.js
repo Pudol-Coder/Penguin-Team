@@ -1,8 +1,13 @@
 // api/send-chat.js
 export default async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
-
     const { username, avatar_url, content } = req.body;
+    
+    const payload = {
+        username: username,    // 여기서 [WEB] 닉네임이 들어감
+        avatar_url: avatar_url, // 여기서 프사가 들어감
+        content: content
+    };
     // 사용자님이 설정하신 환경 변수 이름으로 가져옵니다.
     const WEBHOOK_URL = process.env.DISCORD_WEBHOOK_CHAT_URL; 
 
