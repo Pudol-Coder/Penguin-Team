@@ -18,32 +18,26 @@ function logout() {
 // 페이지 로드 시 상태 체크
 window.addEventListener('load', () => {
     const urlParams = new URLSearchParams(window.location.search);
-    const userParam = urlParams.get('user');
+    
+    // 1. 주소창에서 'access_token'이라는 이름을 찾습니다! 🐧
+    const token = urlParams.get('access_token');
 
-    // 1. URL에 유저 정보가 들어온 경우 (로그인 직후)
-    if (userParam) {
-        try {
-            const userData = JSON.parse(decodeURIComponent(userParam));
-            localStorage.setItem('user', JSON.stringify(userData));
-            // 주소창에서 파라미터 지우기 (지저분하지 않게!)
-            window.history.replaceState({}, document.title, "/");
-        } catch (e) {
-            console.error("유저 데이터 파싱 에러:", e);
-        }
-    }
+    if (token) {
+        console.log('성공의 열쇠(토큰) 발견! 🔑');
+        
+        // 일단 "인증 완료" 상태로 UI를 강제로 바꿉니다.
+        const loginBtn = document.getElementById('login-btn');
+        const userInfo = document.getElementById('user-info');
+        const welcomeMsg = document.getElementById('welcome-msg');
 
-    // 2. 화면 업데이트
-    const savedUser = JSON.parse(localStorage.getItem('user'));
-    const loginBtn = document.getElementById('login-btn');
-    const userInfo = document.getElementById('user-info');
-    const welcomeMsg = document.getElementById('welcome-msg');
-
-    if (savedUser) {
         if (loginBtn) loginBtn.style.display = 'none';
         if (userInfo) userInfo.style.display = 'block';
-        if (welcomeMsg) welcomeMsg.innerText = `🐧 ${savedUser.username}님 환영해요!`;
-    } else {
-        if (loginBtn) loginBtn.style.display = 'block';
-        if (userInfo) userInfo.style.display = 'none';
+        if (welcomeMsg) welcomeMsg.innerText = `🐧 인증 완료! 환영합니다!`;
+
+        // 토큰을 저장해둡니다 (나중에 유저 정보 불러올 때 쓰기 위해)
+        localStorage.setItem('discord_token', token);
+
+        // 주소창의 지저분한 토큰 정보는 싹 지워줍니다 (보안상 좋음!)
+        window.history.replaceState({}, document.title, "/");
     }
 });
