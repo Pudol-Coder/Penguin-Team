@@ -64,15 +64,21 @@
             animation: peek 1.5s ease-out; transition: right 0.3s ease;
         }
         .penguin-logo {
-            width: 450px; height: auto;
-            filter: drop-shadow(-10px 10px 20px rgba(0,0,0,0.1));
-            transform: rotate(-5deg);
-            opacity: 0.3
-            transition: opacity 0.5s ease; /* 부드럽게 변하는 마법 */
+            /* 1. 기본 상태: 50% 투명 */
+            opacity: 0.5;
+    
+            /* 2. 부드러운 변화를 위해 추가 (0.3초 동안 스르륵) */
+            transition: opacity 0.3s ease;
+            
+            /* 기존에 있던 다른 스타일들(width 등)은 그대로 두세요! */
+            width: 450px; 
+            height: auto;
         }
 
+        /* 3. 마우스를 갖다 댔을 때 (Hover) */
         .penguin-logo:hover {
-            opacity: 0.7;
+            /* 80% 정도 선명해지게 설정 */
+            opacity: 0.8;
         }
         }
         .peekaboo-penguin:hover { right: -20px; cursor: pointer; }
