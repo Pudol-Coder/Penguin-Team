@@ -41,3 +41,15 @@ window.addEventListener('load', () => {
         window.history.replaceState({}, document.title, "/");
     }
 });
+function goToChat() {
+    const user = localStorage.getItem('user');
+    
+    if (!user) {
+        alert("🐧 펭귄 요원: 먼저 로그인을 해주셔야 채팅 기능을 사용할 수 있어요!");
+        // 로그인 버튼이 있는 곳으로 스크롤하거나 로그인 유도
+        return;
+    }
+    
+    // 로그인이 되어 있다면 채팅 페이지로 이동!
+    location.href = '/discord/chat/';
+}
