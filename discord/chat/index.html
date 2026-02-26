@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PENGUIN | 원격 채팅</title>
+    <style>
+        body, html {
+            margin: 0; padding: 0; height: 100%;
+            font-family: 'Pretendard', sans-serif;
+            background-color: #313338; /* 디스코드 다크 배경색 */
+            color: #dbdee1;
+            display: flex; flex-direction: column;
+        }
+
+        /* 상단 바 */
+        header {
+            height: 50px; background: #2b2d31;
+            display: flex; align-items: center; padding: 0 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            border-bottom: 1px solid #1e1f22;
+        }
+
+        header h2 { font-size: 0.9rem; color: #f2f3f5; margin-left: 10px; }
+
+        /* 채팅 로그 영역 */
+        #chat-log {
+            flex: 1; overflow-y: auto; padding: 20px;
+            display: flex; flex-direction: column; gap: 15px;
+        }
+
+        .msg-box { display: flex; gap: 15px; animation: fadeIn 0.3s ease; }
+        .avatar { width: 40px; height: 40px; border-radius: 50%; background: #5865F2; }
+        .msg-content { display: flex; flex-direction: column; }
+        .user-name { font-weight: bold; font-size: 0.95rem; color: #ffffff; margin-bottom: 4px; }
+        .text { font-size: 0.9rem; line-height: 1.4; color: #dbdee1; }
+
+        /* 하단 입력창 */
+        .input-area {
+            padding: 20px; background: #313338;
+        }
+
+        .input-wrapper {
+            background: #383a40; border-radius: 8px;
+            padding: 10px 15px; display: flex; align-items: center; gap: 10px;
+        }
+
+        input {
+            flex: 1; background: transparent; border: none; color: #dcdee1;
+            font-size: 0.95rem; outline: none;
+        }
+
+        .send-btn {
+            background: #5865F2; color: white; border: none;
+            padding: 8px 15px; border-radius: 5px; cursor: pointer;
+            font-weight: bold; transition: 0.2s;
+        }
+        .send-btn:hover { background: #4752c4; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+<header>
+    <span style="color: #80848e;">#</span>
+    <h2>펭귄팀-원격-공지</h2>
+</header>
+
+<div id="chat-log">
+    <div class="msg-box">
+        <div class="avatar" style="background-image: url('https://cdn-icons-png.flaticon.com/512/3588/3588612.png'); background-size: cover;"></div>
+        <div class="msg-content">
+            <span class="user-name">시스템 펭귄 🐧</span>
+            <span class="text">로그인 후 메시지를 입력하면 디스코드 서버로 공지가 전송됩니다!</span>
+        </div>
+    </div>
+</div>
+
+<div class="input-area">
+    <div class="input-wrapper">
+        <input type="text" id="msg-input" placeholder="#펭귄팀-원격-공지에 메시지 보내기" onkeypress="handleEnter(event)">
+        <button class="send-btn" onclick="sendNotice()">전송</button>
+    </div>
+</div>
+
+<script>
+    // ⚠️ 보안을 위해 실제 서비스 시에는 백엔드 처리가 필요하지만, 일단 테스트용으로 직접 넣습니다.
+    const WEBHOOK_URL = '여기에_웹훅_주소를_넣으세요';
+
+    function handleEnter(e) {
+        if (e.key === 'Enter') sendNotice();
+    }
+
+    async function sendNotice() {
+        const input = document.getElementById('msg-input');
+        const text = input.value.trim();
+        const user = JSON.parse(localStorage.getItem('user'));
+
+        if (!text) return;
+        if (!user) {
+            alert("메인 페이지에서 먼저 로그인을 해주세요! 🐧");
+            return;
+        }
+
+        // 1. 화면에 내가 쓴 메시지 즉시 추가 (미리보기)
+        addMessageToUI(user.username, text, `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`);
+        input.value = '';
+
+        // 2. 디스코드로 실제 전송
+        try {
+            await fetch(WEBHOOK_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username: `[원격] ${user.username}`,
+                    avatar_url: `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`,
+                    content: text
+                })
+            });
+        } catch (err) {
+            console.error("전송 실패:", err);
+            alert("디스코드 연결에 실패했습니다.");
+        }
+    }
+
+    function addMessageToUI(name, msg, img) {
+        const log = document.getElementById('chat-log');
+        const html = `
+            <div class="msg-box">
+                <img src="${img}" class="avatar" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3588/3588612.png'">
+                <div class="msg-content">
+                    <span class="user-name">${name}</span>
+                    <span class="text">${msg}</span>
+                </div>
+            </div>
+        `;
+        log.innerHTML += html;
+        log.scrollTop = log.scrollHeight; // 스크롤 맨 아래로
+    }
+</script>
+
+</body>
+</html>
