@@ -4,7 +4,7 @@ const CLIENT_ID = '1475832477862989968';
 const REDIRECT_URI = encodeURIComponent('https://leaf.penguinteam.kro.kr/api/auth');
 
 function discordLogin() {
-    const url = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=identify`;
+    const url = `https://discord.com/oauth2/authorize?client_id=1475832477862989968&response_type=code&redirect_uri=https%3A%2F%2Fleaf.penguinteam.kro.kr%2Fapi%2Fauth&scope=identify`;
     location.href = url;
 }
 
