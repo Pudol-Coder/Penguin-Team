@@ -8,6 +8,22 @@ function discordLogin() {
     const url = `https://discord.com/oauth2/authorize?client_id=${CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=identify`;
     window.location.href = url;
 }
+// 로그아웃 함수: 서버 거칠 필요 없이 바로 로컬 데이터를 비웁니다. 🐧🧹
+function logout() {
+    console.log("로그아웃 시도...");
+    
+    // 1. 저장된 모든 유저 정보 삭제
+    localStorage.removeItem('discord_token');
+    localStorage.removeItem('user');
+    
+    // (선택사항) 만약 모든 데이터를 한 번에 지우고 싶다면:
+    // localStorage.clear(); 
+
+    alert("성공적으로 로그아웃되었습니다. 펭귄님, 다음에 또 봐요! 👋");
+
+    // 2. 메인 페이지로 새로고침 이동 (UI가 자동으로 로그인 전 상태로 돌아감)
+    window.location.href = '/';
+}
 
 // 3. 채팅방 이동 함수
 function goToChat() {
