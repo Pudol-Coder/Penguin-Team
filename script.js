@@ -1,11 +1,11 @@
 // 1. 설정 값
 const CLIENT_ID = '1475832477862989968';
 const REDIRECT_URI = 'https://leaf.penguinteam.kro.kr/api/auth';
+const GUILD_ID = '1472090208496386090'; // 여기에 디스코드 서버 ID를 넣으세요!
 
-// 2. 로그인 함수 (가장 단순하게!)
 function discordLogin() {
-    console.log("로그인 시도...");
-    const url = `https://discord.com/oauth2/authorize?client_id=${CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=identify`;
+    // scope에 guilds.members.read를 추가했습니다.
+    const url = `https://discord.com/oauth2/authorize?client_id=${CLIENT_ID}&response_type=code&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=identify+guilds.members.read`;
     window.location.href = url;
 }
 // 로그아웃 함수: 서버 거칠 필요 없이 바로 로컬 데이터를 비웁니다. 🐧🧹
