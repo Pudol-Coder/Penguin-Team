@@ -97,19 +97,15 @@
         const text = input.value.trim();
         const user = JSON.parse(localStorage.getItem('user'));
 
-        if (!text) return;
-        if (!user) {
-            alert("메인 페이지에서 먼저 로그인을 해주세요! 🐧");
-            return;
-        }
+        if (!text || !user) return;
 
-        // 1. 화면에 내가 쓴 메시지 즉시 추가 (미리보기)
+        // UI에 먼저 표시 (선택 사항)
         addMessageToUI(user.username, text, `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`);
         input.value = '';
 
-        // 2. 디스코드로 실제 전송
         try {
-            await fetch(WEBHOOK_URL, {
+            // 우리 서버의 API로 전송! (Vercel 환경 변수를 통해 전달됨)
+            const response = await fetch('/api/send-chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -118,9 +114,12 @@
                     content: text
                 })
             });
+    
+            if (!response.ok) {
+                alert("메시지 전송에 실패했습니다. 환경 변수를 확인해주세요!");
+            }
         } catch (err) {
-            console.error("전송 실패:", err);
-            alert("디스코드 연결에 실패했습니다.");
+            console.error("보안 전송 실패:", err);
         }
     }
 
