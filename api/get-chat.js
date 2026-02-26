@@ -1,5 +1,5 @@
 export default async function handler(req, res) {
-    const CHANNEL_ID = '채팅을_가져올_채널_ID'; // 여기에 디스코드 채널 ID 입력!
+    const CHANNEL_ID = '1472090208496386090'; // 여기에 디스코드 채널 ID 입력!
     const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
 
     try {
