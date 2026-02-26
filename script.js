@@ -42,9 +42,9 @@ window.addEventListener('load', () => {
     }
 });
 function goToChat() {
-    const user = localStorage.getItem('access_token');
+    const user = localStorage.getItem('discord_token');
     
-    if (!access_token) {
+    if (!discord_token) {
         alert("🐧 먼저 로그인을 해주셔야 채팅 기능을 사용할 수 있어요!");
         // 로그인 버튼이 있는 곳으로 스크롤하거나 로그인 유도
         return;
