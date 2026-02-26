@@ -168,6 +168,21 @@
         log.innerHTML += html;
         log.scrollTop = log.scrollHeight; // 스크롤 맨 아래로
     }
+    async function refreshChat() {
+        // GET 요청으로 쌓여있는 메시지만 슥 가져오기
+        const res = await fetch('/api/discord-webhook');
+        const messages = await res.json();
+        
+        const chatBox = document.getElementById('chat-box');
+        chatBox.innerHTML = ''; 
+        
+        messages.forEach(msg => {
+            addMessageToUI(msg.username, msg.content, msg.avatar);
+        });
+    }
+
+// 5초마다 확인 (서버 부담 거의 없음)
+setInterval(refreshChat, 5000);
 </script>
 
 </body>
