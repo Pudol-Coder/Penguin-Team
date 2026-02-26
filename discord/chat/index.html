@@ -85,6 +85,14 @@
 </div>
 
 <script>
+    // discord/chat/index.html 상단 <script>
+    window.onload = () => {
+        const token = localStorage.getItem('discord_token');
+        if (!token) {
+            alert("🚨 로그인한 펭귄만 들어올 수 있습니다!");
+            location.href = "/"; // 메인으로 쫓아내기
+        }
+    };
     // ⚠️ 보안을 위해 실제 서비스 시에는 백엔드 처리가 필요하지만, 일단 테스트용으로 직접 넣습니다.
     const WEBHOOK_URL = '{DISCORD_WEBHOOK_CHAT}';
 
