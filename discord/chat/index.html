@@ -160,13 +160,86 @@
         `;
         log.innerHTML += msgHtml;
     }
+    // --- 펭귄 사용 시간 관리 시스템 ---
+    const MAX_MINUTES = 300; // 5시간 (300분)
 
+    // UI에 시간을 표시할 요소 생성 (없으면 자동 생성)
+    function createTimerUI() {
+        let timerDiv = document.getElementById('usage-timer');
+        if (!timerDiv) {
+            timerDiv = document.createElement('div');
+            timerDiv.id = 'usage-timer';
+            // 상단 바 근처에 배치되도록 스타일 설정
+            timerDiv.style = "position: fixed; top: 12px; right: 60px; font-size: 12px; color: #80848e; background: #1e1f22; padding: 4px 8px; border-radius: 4px; z-index: 1000;";
+            document.body.appendChild(timerDiv);
+        }
+        return timerDiv;
+    }
+
+    function updateUsage() {
+        const now = new Date();
+        // 사용자 컴퓨터 시간을 바꿔도 날짜는 서버(네트워크) 기준으로 어느 정도 체크됨
+        const today = now.getFullYear() + '-' + (now.getMonth() + 1) + '-' + now.getDate();
+        
+        let usageData = JSON.parse(localStorage.getItem('penguin_usage') || '{}');
+
+        // 1. 날짜가 바뀌었는지 확인 (우회 방지 기초)
+        if (usageData.date !== today) {
+            usageData = { date: today, minutes: 0, lastCheck: now.getTime() };
+        }
+    
+        // 2. 시간 초과 검사
+        if (usageData.minutes >= MAX_MINUTES) {
+            lockChat("오늘의 5시간 사용량을 모두 소진했습니다! 내일 만나요. 🐧💤");
+            updateTimerDisplay(0);
+            return;
+        }
+
+        // 3. 시간 업데이트 (1분 추가)
+        usageData.minutes += 1;
+        localStorage.setItem('penguin_usage', JSON.stringify(usageData));
+        
+        updateTimerDisplay(MAX_MINUTES - usageData.minutes);
+    }
+
+    // 남은 시간 화면 표시
+    function updateTimerDisplay(remaining) {
+        const timerDiv = createTimerUI();
+        const hours = Math.floor(remaining / 60);
+        const mins = remaining % 60;
+        timerDiv.innerText = `남은 시간: ${hours}시간 ${mins}분`;
+    }
+
+    // 채팅 차단
+    function lockChat(message) {
+        const input = document.getElementById('msg-input');
+        const btn = document.querySelector('.send-btn');
+        const chatLog = document.getElementById('chat-log');
+    
+        if (input) {
+            input.disabled = true;
+            input.placeholder = message;
+            input.style.background = "#2b2d31";
+        }
+        if (btn) btn.style.display = 'none';
+        
+        // 메시지창에 경고 한 번 더 띄우기
+        if (chatLog && !document.getElementById('lock-notice')) {
+            const notice = document.createElement('div');
+            notice.id = 'lock-notice';
+            notice.style = "text-align: center; color: #f23f43; padding: 20px; font-weight: bold;";
+            notice.innerText = "🛑 사용 시간이 초과되어 채팅이 비활성화되었습니다.";
+            chatLog.appendChild(notice);
+        }
+
+        clearInterval(chatInterval); // 자동 갱신 중단
+    }
     async function sendNotice() {
         const input = document.getElementById('msg-input');
         const text = input.value.trim();
         const token = localStorage.getItem('discord_token');
         const rawUserData = localStorage.getItem('user');
-
+    
         if (!text) return;
 
         let userData = null;
