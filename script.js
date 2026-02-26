@@ -68,19 +68,29 @@ function checkLoginStatus() {
 // 유저 정보 가져오기 (별도 함수로 격리)
 async function fetchUserInfo(token) {
     try {
-        const response = await fetch('https://discord.com/api/users/@me', {
+        // 일반 유저 정보도 일단 가져오고 (프사 때문)
+        const userRes = await fetch('https://discord.com/api/users/@me', {
             headers: { 'Authorization': `Bearer ${token}` }
         });
-        if (!response.ok) throw new Error('인증 실패');
-        
-        const data = await response.json();
+        const userData = await userRes.json();
+
+        // [핵심] 특정 서버 내에서의 내 정보를 가져옵니다.
+        const memberRes = await fetch(`https://discord.com/api/users/@me/guilds/${GUILD_ID}/member`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const memberData = await memberRes.json();
+
+        // 서버 별명(nick)이 있으면 그걸 쓰고, 없으면 글로벌 닉네임을 씁니다.
+        const finalNickname = memberData.nick || userData.global_name || userData.username;
+
         localStorage.setItem('user', JSON.stringify({
-            username: data.username,
-            avatar: data.avatar,
-            id: data.id
+            username: finalNickname,
+            avatar: userData.avatar,
+            id: userData.id
         }));
-        console.log("🐧 유저 정보 저장 완료:", data.username);
+        
+        console.log("🐧 서버 닉네임 연동 완료:", finalNickname);
     } catch (err) {
-        console.error("유저 정보 로드 실패:", err);
+        console.error("서버 닉네임을 가져오지 못했습니다:", err);
     }
 }
