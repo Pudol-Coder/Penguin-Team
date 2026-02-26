@@ -42,14 +42,16 @@ window.addEventListener('load', () => {
     }
 });
 function goToChat() {
-    const user = localStorage.getItem('discord_token');
+    // 이제 'discord_token'이라는 이름의 열쇠를 찾습니다!
+    const token = localStorage.getItem('discord_token');
     
-    if (!discord_token) {
-        alert("🐧 먼저 로그인을 해주셔야 채팅 기능을 사용할 수 있어요!");
-        // 로그인 버튼이 있는 곳으로 스크롤하거나 로그인 유도
+    console.log("확인된 디스코드 토큰:", token);
+
+    if (!token) {
+        alert("🐧 아직 디스코드 토큰을 찾지 못했어요. 로그인을 완료해주세요!");
         return;
     }
     
-    // 로그인이 되어 있다면 채팅 페이지로 이동!
+    // 열쇠가 있다면 바로 이동!
     location.href = '/discord/chat/';
 }
