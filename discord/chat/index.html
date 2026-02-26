@@ -168,21 +168,37 @@
         log.innerHTML += html;
         log.scrollTop = log.scrollHeight; // 스크롤 맨 아래로
     }
-    async function refreshChat() {
-        // GET 요청으로 쌓여있는 메시지만 슥 가져오기
-        const res = await fetch('/api/discord-webhook');
-        const messages = await res.json();
-        
-        const chatBox = document.getElementById('chat-box');
-        chatBox.innerHTML = ''; 
-        
-        messages.forEach(msg => {
-            addMessageToUI(msg.username, msg.content, msg.avatar);
-        });
+    let lastMessageId = null;
+
+    async function fetchChat() {
+        try {
+            const response = await fetch('/api/get-chat');
+            const messages = await response.json();
+            
+            const chatBox = document.getElementById('chat-box'); // 채팅창 ID 확인!
+
+            // 마지막 메시지 ID가 달라졌을 때만 화면 갱신 (반짝임 방지)
+            if (messages.length > 0 && messages[messages.length - 1].id !== lastMessageId) {
+                chatBox.innerHTML = ''; // 싹 비우고 다시 그리기
+                messages.forEach(msg => {
+                    addMessageToUI(msg.username, msg.content, msg.avatar);
+                });
+                lastMessageId = messages[messages.length - 1].id;
+                
+                // 스크롤 맨 아래로
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
+        } catch (err) {
+            console.error("채팅 로딩 실패:", err);
+        }
     }
 
-// 5초마다 확인 (서버 부담 거의 없음)
-setInterval(refreshChat, 5000);
+    // 5초마다 실행! 🐧✨
+    setInterval(fetchChat, 5000);
+    window.addEventListener('load', fetchChat);
+    
+    // 5초마다 확인 (서버 부담 거의 없음)
+    setInterval(refreshChat, 5000);
 </script>
 
 </body>
