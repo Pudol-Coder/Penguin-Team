@@ -12,66 +12,48 @@ function logout() {
     window.location.href = '/api/logout';
 }
 
-// 🐧 페이지 로드 시 상태 체크 및 정보 저장
-window.addEventListener('load', () => {
+window.addEventListener('load', async () => {
     const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('access_token');
+    let token = urlParams.get('access_token');
+    
+    // 주소창에 없으면 이미 저장된 게 있는지 확인
+    if (!token) token = localStorage.getItem('discord_token');
 
-    // 주소창에서 유저 정보도 같이 오는지 체크 (없으면 일단 비워둠)
-    const username = urlParams.get('username');
-    const avatar = urlParams.get('avatar');
-    const userId = urlParams.get('id');
-
-    if (token) {
-        console.log('🔑 성공의 열쇠 발견!');
+    if (token && token !== "null") {
         localStorage.setItem('discord_token', token);
-
-        // [중요] 유저 정보를 객체로 만들어 저장해야 채팅창에서 닉네임이 나옵니다!
-        if (username) {
-            const userObj = {
-                username: username,
-                avatar: avatar,
-                id: userId
-            };
-            localStorage.setItem('user', JSON.stringify(userObj));
+        
+        // [핵심] 유저 정보가 없으면 디스코드 API에서 직접 가져옵니다.
+        if (!localStorage.getItem('user')) {
+            console.log("유저 정보가 없네요! 디스코드에서 직접 가져올게요... 🐧");
+            await fetchUserInfo(token);
         }
 
-        // UI 변경 로직
         updateUI(true);
-
-        // 주소창 정리
-        window.history.replaceState({}, document.title, "/");
-    } else {
-        // 이미 로그인 되어있는지 확인
-        const savedToken = localStorage.getItem('discord_token');
-        if (savedToken) updateUI(true);
+        // 주소창 정리 (정보를 다 가져온 뒤에 지우는 게 안전함)
+        if (urlParams.has('access_token')) {
+            window.history.replaceState({}, document.title, "/");
+        }
     }
 });
 
-// 로그인 상태에 따라 UI를 바꿔주는 함수
-function updateUI(isLoggedIn) {
-    const loginBtn = document.getElementById('login-btn');
-    const userInfo = document.getElementById('user-info');
-    const welcomeMsg = document.getElementById('welcome-msg');
+// 디스코드에 "나 누구야?"라고 물어보는 함수
+async function fetchUserInfo(token) {
+    try {
+        const response = await fetch('https://discord.com/api/users/@me', {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        const userData = await response.json();
 
-    if (isLoggedIn) {
-        if (loginBtn) loginBtn.style.display = 'none';
-        if (userInfo) userInfo.style.display = 'block';
-        if (welcomeMsg) welcomeMsg.innerText = `🐧 인증 완료! 환영합니다!`;
+        if (userData.id) {
+            const userObj = {
+                username: userData.username,
+                avatar: userData.avatar,
+                id: userData.id
+            };
+            localStorage.setItem('user', JSON.stringify(userObj));
+            console.log("유저 정보 저장 완료:", userObj.username);
+        }
+    } catch (err) {
+        console.error("유저 정보를 가져오는데 실패했습니다:", err);
     }
-}
-
-// 🐧 문제의 리다이렉트 버튼 함수!
-function goToChat() {
-    const token = localStorage.getItem('discord_token');
-    
-    console.log("현재 토큰 상태:", token);
-
-    if (!token || token === "null" || token === "undefined") {
-        alert("🚨 로그인한 펭귄만 들어갈 수 있는 비밀 구역입니다!");
-        return;
-    }
-    
-    // 경로가 확실하도록 전체 경로를 써주는 게 안전해요.
-    location.href = '/discord/chat/index.html';
 }
