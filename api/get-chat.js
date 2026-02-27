@@ -1,29 +1,34 @@
 export default async function handler(req, res) {
-    const CHANNEL_ID = '1472090209276395694'; // 여기에 디스코드 채널 ID 입력!
+    // 🐧 브라우저에서 보낸 channelId를 받습니다. 없으면 기본 채널 사용!
+    const { channelId } = req.query; 
+    const TARGET_ID = channelId || '기본_채널_ID'; 
     const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
 
     try {
-        const response = await fetch(`https://discord.com/api/v10/channels/${CHANNEL_ID}/messages?limit=10`, {
-            headers: { 'Authorization': `Bot ${BOT_TOKEN}` }
+        const [msgRes, channelRes] = await Promise.all([
+            fetch(`https://discord.com/api/v10/channels/${TARGET_ID}/messages?limit=15`, {
+                headers: { 'Authorization': `Bot ${BOT_TOKEN}` }
+            }),
+            fetch(`https://discord.com/api/v10/channels/${TARGET_ID}`, {
+                headers: { 'Authorization': `Bot ${BOT_TOKEN}` }
+            })
+        ]);
+
+        const messages = await msgRes.json();
+        const channelInfo = await channelRes.json();
+
+        res.status(200).json({
+            channelName: channelInfo.name,
+            messages: messages.map(m => ({
+                id: m.id,
+                username: m.author.global_name || m.author.username,
+                avatar: m.author.avatar 
+                    ? `https://cdn.discordapp.com/avatars/${m.author.id}/${m.author.avatar}.png`
+                    : 'https://cdn-icons-png.flaticon.com/512/3588/3588612.png',
+                content: m.content
+            }))
         });
-
-        if (!response.ok) throw new Error('디스코드 응답 에러');
-
-        const data = await response.json();
-        
-        // 필요한 데이터(이름, 프사, 내용)만 추출
-        const messages = data.map(m => ({
-            id: m.id,
-            username: m.author.global_name || m.author.username,
-            avatar: m.author.avatar 
-                ? `https://cdn.discordapp.com/avatars/${m.author.id}/${m.author.avatar}.png`
-                : 'https://cdn-icons-png.flaticon.com/512/3588/3588612.png',
-            content: m.content
-        }));
-
-        res.status(200).json(messages.reverse()); // 시간순 정렬
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: '채팅을 가져오지 못했습니다.' });
+        res.status(500).json({ error: '채널 정보를 가져오지 못했습니다.' });
     }
 }
