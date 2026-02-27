@@ -110,6 +110,41 @@
 </div>
 
 <script>
+    // 관리할 채널 리스트 (나중에 여기에 ID만 추가하면 끝!)
+    const CHANNELS = [
+        { name: "공지", id: "1472091143863799849" },
+        { name: "이벤트", id: "1472807840740540447" },
+        { name: "역할", id: "1472867165815177389" }
+        { name: "규칙", id: "1472870887299743774" }
+        { name: "채팅", id: "1472090209276395694" }
+        { name: "일상", id: "1472868706760523978" }
+        { name: "채팅회의", id: "1472838561505083522" }
+    ];
+
+    let currentChannelId = CHANNELS[0].id; // 현재 보고 있는 채널
+
+    function renderChannelList() {
+        const list = document.getElementById('channel-list');
+        list.innerHTML = CHANNELS.map(ch => `
+            <div class="channel-item ${ch.id === currentChannelId ? 'active' : ''}" 
+                 onclick="switchChannel('${ch.id}')"
+                 style="padding: 8px 10px; color: #8e9297; cursor: pointer; border-radius: 4px; margin-bottom: 2px;">
+                # ${ch.name}
+            </div>
+        `).join('');
+    }
+    
+    // 채널 전환 함수
+    function switchChannel(id) {
+        currentChannelId = id;
+        lastMessageId = null; // ID 초기화해서 새 채팅 바로 불러오게 함
+        document.getElementById('chat-log').innerHTML = '<p style="padding:20px;">로딩 중...</p>';
+        renderChannelList(); // 목록 활성화 표시 업데이트
+        fetchChat(); // 즉시 데이터 호출
+    }
+    
+    // fetchChat 함수 내 fetch 주소 수정!
+    // const response = await fetch(`/api/get-chat?channelId=${currentChannelId}`);
     let lastMessageId = null;
 
     window.onload = () => {
