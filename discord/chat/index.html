@@ -119,29 +119,44 @@
     let currentChannelId = CHANNELS[0].id;
     let lastMessageId = null;
     const MAX_MINUTES = 300;
-    // 🐧 디스코드 마크다운 & 이모지 변환기
+    // 🐧 디스코드 마크다운 완벽 지원 버전
     function parseDiscordMarkdown(text) {
         if (!text) return "";
     
-        return text
-            // 1. 굵게 (**text**)
+        // 1. HTML 특수문자 방지 (보안)
+        let html = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    
+        return html
+            // 2. 하이퍼링크 문법 [제목](링크)
+            .replace(/\[(.*?)\]\(&lt;(https?:\/\/.*?)&gt;\)/g, '<a href="$2" target="_blank" style="color: #00a8fc; text-decoration: none;">$1</a>')
+            .replace(/\[(.*?)\]\((https?:\/\/.*?)\)/g, '<a href="$2" target="_blank" style="color: #00a8fc; text-decoration: none;">$1</a>')
+    
+            // 3. 헤더 (디스코드는 # 뒤에 반드시 공백이 있어야 함)
+            .replace(/^### (.*$)/gm, '<h3 style="font-size: 1rem; color: #ffffff; margin: 8px 0 4px 0;">$1</h3>')
+            .replace(/^## (.*$)/gm, '<h2 style="font-size: 1.2rem; color: #ffffff; margin: 10px 0 5px 0;">$1</h2>')
+            .replace(/^# (.*$)/gm, '<h1 style="font-size: 1.5rem; color: #ffffff; margin: 12px 0 6px 0; border-bottom: 1px solid #3f4147;">$1</h1>')
+    
+            // 4. 리스트 (- 내용)
+            .replace(/^- (.*$)/gm, '<div style="display: flex; gap: 8px; margin-left: 10px;"><span style="color: #949ba4;">•</span><span>$1</span></div>')
+    
+            // 5. 굵게 (**text**)
             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-            // 2. 기울임 (*text* 또는 _text_)
+    
+            // 6. 기울임 (*text* 또는 _text_)
             .replace(/\*(.*?)\*/g, '<em>$1</em>')
             .replace(/_(.*?)_/g, '<em>$1</em>')
-            // 3. 취소선 (~~text~~)
+    
+            // 7. 취소선 (~~text~~)
             .replace(/~~(.*?)~~/g, '<del>$1</del>')
-            // 4. 코드 블록 (`text`)
-            .replace(/`(.*?)`/g, '<code style="background: #2b2d31; padding: 2px 4px; border-radius: 4px; font-family: monospace;">$1</code>')
-            // 5. 인용문 (> text)
-            .replace(/^> (.*)$/gm, '<blockquote style="border-left: 4px solid #4e5058; padding-left: 10px; margin: 5px 0; color: #b5bac1;">$1</blockquote>')
-            // 6. 이모지 처리 (간단한 예시: :smile: -> 😊)
-            // 실제 디스코드 커스텀 이모지는 <:_name_:ID> 형식이지만 일단 기본 이모지 텍스트 대응
-            .replace(/:smile:/g, '😊')
-            .replace(/:wink:/g, '😉')
-            .replace(/:heart:/g, '❤️')
-            .replace(/:penguin:/g, '🐧')
-            .replace(/:check:/g, '✅');
+    
+            // 8. 인용문 (> text)
+            .replace(/^&gt; (.*)$/gm, '<blockquote style="border-left: 4px solid #4e5058; padding-left: 10px; margin: 5px 0; color: #b5bac1;">$1</blockquote>')
+    
+            // 9. 코드 블록 (`text`)
+            .replace(/`(.*?)`/g, '<code style="background: #2b2d31; padding: 2px 4px; border-radius: 4px; font-family: monospace; color: #e3e5e8;">$1</code>')
+    
+            // 10. 줄바꿈 처리 (\n -> <br>)
+            .replace(/\n/g, '<br>');
     }
     window.onload = () => {
         if (!localStorage.getItem('discord_token')) {
