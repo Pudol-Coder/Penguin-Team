@@ -113,12 +113,26 @@
         { name: "일상", id: "1472868706760523978", canSend: true, maxMore: 3 },
         { name: "채팅회의", id: "1472838561505083522", canSend: true, maxMore: 3 }
     ];
-
+    let chatTimer = null; // 현재 돌아가는 타이머를 담을 변수
     let currentChannelId = CHANNELS[0].id;
     let lastMessageId = null;
     let moreCount = 0; // 더보기 클릭 횟수
     const MAX_MINUTES = 300;
-
+    function startChatTimer() {
+        // 1. 기존에 돌고 있던 타이머가 있다면 즉시 중단
+        if (chatTimer) clearInterval(chatTimer);
+    
+        // 2. 현재 채널 정보에 따른 주기 설정
+        const channelInfo = CHANNELS.find(ch => ch.id === currentChannelId);
+        
+        // 메시지 전송 불가능(공지용)이면 30초, 채팅용이면 5초
+        const interval = (channelInfo && !channelInfo.canSend) ? 30000 : 5000;
+        
+        console.log(`📡 현재 채널 [#${channelInfo.name}] 새로고침 주기: ${interval / 1000}초`);
+    
+        // 3. 새 주기 설정
+        chatTimer = setInterval(fetchChat, interval);
+    }
     function parseDiscordMarkdown(text) {
         if (!text) return "";
         let html = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -192,6 +206,9 @@
         document.getElementById('current-channel-name').innerText = name;
         renderChannelList();
         fetchChat();
+    
+        // 🐧 채널에 맞는 새로고침 타이머 시작!
+        startChatTimer();
     }
 
     async function fetchChat(isMore = false) {
@@ -245,10 +262,12 @@
         if (!localStorage.getItem('discord_token')) { location.href = "/"; return; }
         renderChannelList();
         fetchChat();
-        setInterval(updateUsage, 60000);
+        
+        setInterval(updateUsage, 60000); // 사용 시간 타이머는 1분 고정
         updateUsage();
+    
+        startChatTimer(); // 🐧 채팅 타이머 시작
     };
-
     function renderChannelList() {
         const list = document.getElementById('channel-list');
         list.innerHTML = CHANNELS.map(ch => `
