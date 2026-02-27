@@ -136,30 +136,48 @@
         const chatLog = document.getElementById('chat-log');
         const oldH = chatLog.scrollHeight;
         const isBottom = chatLog.scrollHeight - chatLog.scrollTop <= chatLog.clientHeight + 100;
-
+    
         const limit = 10 + (moreCount * 10);
         try {
             const res = await fetch(`/api/get-chat?channelId=${currentChannelId}&limit=${limit}`);
-            const messages = await res.json();
+            if (!res.ok) throw new Error('네트워크 응답 이상');
+            
+            const data = await res.json();
+            
+            // 🐧 포인트: 데이터가 배열인지, 혹은 messages 객체 안에 있는지 유연하게 체크
+            const messages = Array.isArray(data) ? data : (data.messages || []);
+    
+            if (messages && messages.length >= 0) {
+                chatLog.innerHTML = '';
+                renderMoreButton();
 
-            chatLog.innerHTML = '';
-            renderMoreButton();
+                // 최신순으로 정렬해서 출력
+                [...messages].reverse().forEach(msg => {
+                    const div = document.createElement('div');
+                    div.className = 'msg-box';
+                    div.innerHTML = `
+                        <img src="${msg.avatar || 'https://cdn-icons-png.flaticon.com/512/3588/3588612.png'}" class="avatar" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3588/3588612.png'">
+                        <div class="msg-content">
+                            <div class="user-header">
+                                <span class="user-name">${msg.username || '알 수 없는 유저'}</span>
+                                <span class="msg-date">오늘</span>
+                            </div>
+                            <div class="text">${parseDiscordMarkdown(msg.content || '')}</div>
+                        </div>`;
+                    chatLog.appendChild(div);
+                });
 
-            messages.reverse().forEach(msg => {
-                const div = document.createElement('div');
-                div.className = 'msg-box';
-                div.innerHTML = `
-                    <img src="${msg.avatar}" class="avatar" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3588/3588612.png'">
-                    <div class="msg-content">
-                        <div class="user-header"><span class="user-name">${msg.username}</span><span class="msg-date">오늘</span></div>
-                        <div class="text">${parseDiscordMarkdown(msg.content)}</div>
-                    </div>`;
-                chatLog.appendChild(div);
-            });
-
-            if (isMore) chatLog.scrollTop = chatLog.scrollHeight - oldH;
-            else if (isBottom) chatLog.scrollTop = chatLog.scrollHeight;
-        } catch (e) { console.error(e); }
+                // 스크롤 유지 로직
+                if (isMore) {
+                    chatLog.scrollTop = chatLog.scrollHeight - oldH;
+                } else if (isBottom) {
+                    chatLog.scrollTop = chatLog.scrollHeight;
+                }
+            }
+        } catch (e) { 
+            console.error("채팅 로딩 에러:", e);
+            chatLog.innerHTML = `<p style="padding:20px; color:#f23f43;">❌ 로딩 실패: ${e.message}</p>`;
+        }
     }
 
     function renderMoreButton() {
