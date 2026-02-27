@@ -1,7 +1,7 @@
 export default async function handler(req, res) {
     // 🐧 브라우저에서 보낸 channelId를 받습니다. 없으면 기본 채널 사용!
     const { channelId } = req.query; 
-    const TARGET_ID = channelId || '기본_채널_ID'; 
+    const TARGET_ID = channelId || '1472090209276395694'; 
     const BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
 
     try {
