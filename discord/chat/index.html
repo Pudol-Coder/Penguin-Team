@@ -5,6 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PENGUIN | 원격 채팅</title>
     <style>
+        /* 스포 방지 글자: 클릭 전엔 배경과 같은 색, 클릭 후(revealed)엔 회색/흰색 */
+        .spoiler {
+            background-color: #1e1f22 !important;
+            color: #1e1f22 !important;
+        }
+        .spoiler.revealed {
+            background-color: #444444 !important;
+            color: #ffffff !important;
+        }
         body, html {
             margin: 0; padding: 0; height: 100%;
             font-family: 'Pretendard', sans-serif;
