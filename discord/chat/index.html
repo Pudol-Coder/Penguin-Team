@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <style>
-        /* ... 기존 스타일 ... */
+        /* AFK 및 레이아웃 스타일 */
         #afk-overlay {
             display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.7); z-index: 1000; color: white;
@@ -13,6 +13,12 @@
             margin-top: 15px; padding: 10px 20px; background: #5865F2; border: none;
             color: white; border-radius: 5px; cursor: pointer; font-weight: bold;
         }
+        .spoiler { background: #222; color: transparent; cursor: pointer; padding: 0 2px; border-radius: 3px; }
+        .spoiler.revealed { background: rgba(255,255,255,0.1); color: inherit; }
+        #load-more-btn { width: 95%; margin: 10px auto; display: block; padding: 8px; background: #4e5058; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        #load-more-btn:hover { background: #6d6f78; }
+        .msg-box img { max-width: 100%; max-height: 250px; border-radius: 8px; margin-top: 5px; border: 1px solid #444; }
+        .emoji { width: 22px; height: 22px; vertical-align: middle; margin: 0 2px; border: none !important; }
     </style>
 </head>
 <body>
@@ -66,16 +72,17 @@
     let chatTimer = null;
     let afkTimer = null;
     let isAFK = false;
-    const AFK_TIME = 3 * 60 * 1000; // 3분
+    const AFK_TIME = 3 * 60 * 1000;
+    const MAX_MINUTES = 300; // 5시간
 
-    // 1. AFK 시스템: 활동 감지
+    // 1. AFK 시스템
     function resetAFK() {
-        if (isAFK) return; // 이미 자리비움이면 무시
+        if (isAFK) return;
         clearTimeout(afkTimer);
         afkTimer = setTimeout(() => {
             isAFK = true;
             document.getElementById('afk-overlay').style.display = 'flex';
-            if (chatTimer) clearInterval(chatTimer); // 새로고침 중단
+            if (chatTimer) clearInterval(chatTimer);
         }, AFK_TIME);
     }
 
@@ -87,7 +94,6 @@
         fetchChat();
     }
 
-    // 이벤트 리스너 (마우스 움직임, 클릭, 키보드)
     ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach(evt => {
         window.addEventListener(evt, resetAFK);
     });
@@ -96,54 +102,75 @@
     function startChatTimer() {
         if (chatTimer) clearInterval(chatTimer);
         const channelInfo = CHANNELS.find(ch => ch.id === currentChannelId);
+        // 공지 채널은 30초, 일반 채팅은 5초 주기로 스마트하게 조절!
         const interval = (channelInfo && !channelInfo.canSend) ? 30000 : 5000;
         chatTimer = setInterval(() => fetchChat(false), interval);
     }
 
-    // 3. 기록 불러오기 (스크롤 유지 로직 포함)
+    // 3. 마크다운 파서 (이모지 & 이미지 포함)
+    function parseDiscordMarkdown(text) {
+        if (!text) return "";
+        let html = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+        // 🔥 커스텀 이모지 처리
+        html = html.replace(/&lt;a?:(\w+):(\d+)&gt;/g, (match, name, id) => {
+            const isAnimated = match.includes('&lt;a:');
+            const ext = isAnimated ? 'gif' : 'png';
+            return `<img src="https://cdn.discordapp.com/emojis/${id}.${ext}" class="emoji" title=":${name}:">`;
+        });
+
+        // 🖼️ 이미지 링크 프리뷰
+        const imageRegex = /(https?:\/\/[^\s]+?\.(?:jpg|jpeg|png|gif|webp)(?:\?[^\s]*)?)/gi;
+        html = html.replace(imageRegex, (url) => {
+            return `<div><img src="${url}"></div>`;
+        });
+
+        // 헤더 및 강조
+        html = html.replace(/^### (.*$)/gm, '<h3 style="color:#fff; margin:4px 0;">$1</h3>')
+                   .replace(/^## (.*$)/gm, '<h2 style="color:#fff; margin:6px 0;">$1</h2>')
+                   .replace(/^# (.*$)/gm, '<h1 style="color:#fff; margin:10px 0; border-bottom: 1px solid #3f4147;">$1</h1>');
+        
+        html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                   .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                   .replace(/\|\|(.*?)\|\|/g, '<span class="spoiler" onclick="this.classList.toggle(\'revealed\')">$1</span>')
+                   .replace(/`(.*?)`/g, '<code style="background:#2b2d31; padding:2px 4px; border-radius:4px;">$1</code>');
+
+        html = html.replace(/&lt;@!?(\d+)&gt;/g, '<span style="color:#c9cdfb; background:rgba(88,101,242,0.3); padding:0 2px; border-radius:3px;">@멘션</span>')
+                   .replace(/&lt;#(\d+)&gt;/g, '<span style="color:#dbdee1; background:rgba(255,255,255,0.1); padding:0 2px; border-radius:3px;">#채널</span>');
+
+        return html.replace(/\n/g, '<br>');
+    }
+
+    // 4. 기록 불러오기 (스크롤 유지)
     async function fetchChat(isMore = false) {
         if (isAFK) return;
         const chatLog = document.getElementById('chat-log');
-        const oldScrollHeight = chatLog.scrollHeight;
-        const oldScrollTop = chatLog.scrollTop;
-        const isAtBottom = oldScrollHeight - oldScrollTop <= chatLog.clientHeight + 100;
+        const oldHeight = chatLog.scrollHeight;
+        const isAtBottom = chatLog.scrollHeight - chatLog.scrollTop <= chatLog.clientHeight + 100;
 
         const limit = 10 + (moreCount * 10);
-        
         try {
             const response = await fetch(`/api/get-chat?channelId=${currentChannelId}&limit=${limit}`);
             if (!response.ok) return;
-            const data = await response.json();
-            const messages = data.messages || data;
+            const messages = await response.json();
 
             if (messages.length > 0) {
                 chatLog.innerHTML = '';
                 renderMoreButton();
-                
                 messages.reverse().forEach(msg => {
-                    const msgDiv = document.createElement('div');
-                    msgDiv.className = 'msg-box';
-                    msgDiv.innerHTML = `
+                    const div = document.createElement('div');
+                    div.className = 'msg-box';
+                    div.innerHTML = `
                         <img src="${msg.avatar}" class="avatar" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3588/3588612.png'">
                         <div class="msg-content">
-                            <div class="user-header">
-                                <span class="user-name">${msg.username}</span>
-                                <span class="msg-date">오늘</span>
-                            </div>
+                            <div class="user-header"><span class="user-name">${msg.username}</span></div>
                             <div class="text">${parseDiscordMarkdown(msg.content)}</div>
                         </div>`;
-                    chatLog.appendChild(msgDiv);
+                    chatLog.appendChild(div);
                 });
 
-                // 스크롤 제어
-                if (isMore) {
-                    // 더보기 클릭 시: 이전 스크롤 위치 유지
-                    chatLog.scrollTop = chatLog.scrollHeight - oldScrollHeight;
-                } else if (isAtBottom) {
-                    // 원래 맨 아래에 있었으면: 새 메시지 와도 아래로 유지
-                    chatLog.scrollTop = chatLog.scrollHeight;
-                }
-                // (그 외의 경우: 사용자가 위를 보고 있으면 스크롤 고정됨)
+                if (isMore) chatLog.scrollTop = chatLog.scrollHeight - oldHeight;
+                else if (isAtBottom) chatLog.scrollTop = chatLog.scrollHeight;
             }
         } catch (err) { console.error(err); }
     }
@@ -151,71 +178,29 @@
     function renderMoreButton() {
         const channelInfo = CHANNELS.find(ch => ch.id === currentChannelId);
         if (moreCount >= channelInfo.maxMore) return;
-
-        const chatLog = document.getElementById('chat-log');
         const btn = document.createElement('button');
         btn.id = 'load-more-btn';
-        const remaining = channelInfo.maxMore === Infinity ? "무제한" : (channelInfo.maxMore - moreCount);
-        btn.innerText = `⬆️ 이전 메시지 더 보기 (남은 횟수: ${remaining})`;
-        btn.onclick = (e) => {
-            e.stopPropagation();
-            moreCount++;
-            fetchChat(true);
-        };
-        chatLog.prepend(btn);
+        btn.innerText = `⬆️ 이전 메시지 더 보기`;
+        btn.onclick = () => { moreCount++; fetchChat(true); };
+        document.getElementById('chat-log').prepend(btn);
     }
 
     function switchChannel(id, name) {
         if (currentChannelId === id) return;
         currentChannelId = id;
         moreCount = 0;
-
+        document.getElementById('current-channel-name').innerText = name;
         const ch = CHANNELS.find(c => c.id === id);
         const input = document.getElementById('msg-input');
         input.disabled = !ch.canSend;
-        input.placeholder = ch.canSend ? `#${name} 에 메시지 보내기` : "이 채널에는 메시지를 보낼 수 없습니다. 🔒";
-
-        document.getElementById('chat-log').innerHTML = '<p style="padding:20px;">로딩 중...</p>';
-        document.getElementById('current-channel-name').innerText = name;
-        
+        input.placeholder = ch.canSend ? `#${name} 에 메시지 보내기` : "메시지 전송 불가 채널 🔒";
         renderChannelList();
         fetchChat();
         startChatTimer();
     }
 
-    // 마크다운 파서 (이전과 동일)
-    function parseDiscordMarkdown(text) {
-        if (!text) return "";
-        let html = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-        html = html.replace(/^### (.*$)/gm, '<h3 style="all:revert; font-size: 1rem; color: #ffffff; margin: 4px 0;">$1</h3>')
-                   .replace(/^## (.*$)/gm, '<h2 style="all:revert; font-size: 1.15rem; color: #ffffff; margin: 6px 0;">$1</h2>')
-                   .replace(/^# (.*$)/gm, '<h1 style="all:revert; font-size: 1.4rem; color: #ffffff; margin: 10px 0; border-bottom: 1px solid #3f4147;">$1</h1>');
-        html = html.replace(/&lt;a?:\w+:(\d+)&gt;/g, '🐧')
-                   .replace(/&lt;@!?(\d+)&gt;/g, '<span style="color: #c9cdfb; background: rgba(88,101,242,0.3); padding: 0 2px; border-radius: 3px;">@멘션</span>')
-                   .replace(/&lt;#(\d+)&gt;/g, '<span style="color: #dbdee1; background: rgba(255,255,255,0.1); padding: 0 2px; border-radius: 3px;">#채널</span>');
-        html = html.replace(/\[(.*?)\]\(&lt;(https?:\/\/.*?)&gt;\)/g, '<a href="$2" target="_blank" style="color: #00a8fc; text-decoration: none;">$1</a>')
-                   .replace(/\[(.*?)\]\((https?:\/\/.*?)\)/g, '<a href="$2" target="_blank" style="color: #00a8fc; text-decoration: none;">$1</a>');
-        html = html.replace(/\|\|(.*?)\|\|/g, '<span class="spoiler" onclick="this.classList.toggle(\'revealed\')">$1</span>');
-        html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\*(.*?)\*/g, '<em>$1</em>');
-        return html.replace(/\n/g, '<br>');
-    }
-
-    // 초기화
-    window.onload = () => {
-        if (!localStorage.getItem('discord_token')) { location.href = "/"; return; }
-        renderChannelList();
-        fetchChat();
-        
-        setInterval(updateUsage, 60000);
-        updateUsage();
-        
-        resetAFK();
-        startChatTimer(); 
-    };
-
     function renderChannelList() {
-        const list = document.getElementById('channel-list');
-        list.innerHTML = CHANNELS.map(ch => `
+        document.getElementById('channel-list').innerHTML = CHANNELS.map(ch => `
             <div class="channel-item ${ch.id === currentChannelId ? 'active' : ''}" onclick="switchChannel('${ch.id}', '${ch.name}')">
                 # ${ch.name}
             </div>`).join('');
@@ -237,32 +222,41 @@
                 })
             });
             input.value = '';
-            fetchChat();
+            fetchChat(); // 보낸 즉시 새로고침
         } catch (err) { console.error(err); }
     }
 
     function handleEnter(e) { if (e.key === 'Enter') sendNotice(); }
     async function manualRefresh() {
-        const icon = document.getElementById('refresh-icon');
-        icon.classList.add('spinning');
+        document.getElementById('refresh-icon').classList.add('spinning');
         await fetchChat();
-        setTimeout(() => icon.classList.remove('spinning'), 800);
+        setTimeout(() => document.getElementById('refresh-icon').classList.remove('spinning'), 800);
     }
 
     function updateUsage() {
         const today = new Date().toISOString().split('T')[0];
-        let usageData = JSON.parse(localStorage.getItem('penguin_usage') || '{}');
-        if (usageData.date !== today) usageData = { date: today, minutes: 0 };
-        if (usageData.minutes >= MAX_MINUTES) {
+        let data = JSON.parse(localStorage.getItem('penguin_usage') || '{}');
+        if (data.date !== today) data = { date: today, minutes: 0 };
+        if (data.minutes >= MAX_MINUTES) {
             document.getElementById('msg-input').disabled = true;
-            document.getElementById('msg-input').placeholder = "오늘의 사용 시간을 모두 소진했습니다. 🐧💤";
+            document.getElementById('msg-input').placeholder = "오늘의 사용량 초과 🐧💤";
             return;
         }
-        usageData.minutes += 1;
-        localStorage.setItem('penguin_usage', JSON.stringify(usageData));
-        const rem = MAX_MINUTES - usageData.minutes;
+        data.minutes += 1;
+        localStorage.setItem('penguin_usage', JSON.stringify(data));
+        const rem = MAX_MINUTES - data.minutes;
         document.getElementById('usage-timer').innerText = `⏱️ ${Math.floor(rem/60)}h ${rem%60}m 남음`;
     }
+
+    window.onload = () => {
+        if (!localStorage.getItem('discord_token')) { location.href = "/"; return; }
+        renderChannelList();
+        fetchChat();
+        setInterval(updateUsage, 60000);
+        updateUsage();
+        resetAFK();
+        startChatTimer();
+    };
 </script>
 </body>
 </html>
