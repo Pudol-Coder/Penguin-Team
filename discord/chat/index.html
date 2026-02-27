@@ -152,6 +152,26 @@
         btn.onclick = loadMoreMessages;
         chatLog.prepend(btn); // 채팅창 맨 위에 추가
     }
+    async function loadMoreMessages() {
+        const channelInfo = CHANNELS.find(ch => ch.id === currentChannelId);
+        
+        // 채팅 채널인데 제한 횟수를 넘었다면?
+        if (moreCount >= channelInfo.maxMore) {
+            alert("⚠️ 채팅 채널은 최근 대화 위주로만 볼 수 있습니다! (제한 완료)");
+            document.getElementById('load-more-btn').style.display = 'none';
+            return;
+        }
+
+        moreCount++;
+        console.log(`현재 더보기 횟수: ${moreCount}`);
+        
+        // 여기서 API 호출 시 'offset'이나 'before' 파라미터를 사용하여 
+        // 현재 로그의 가장 오래된 메시지보다 이전의 것을 요청해야 합니다.
+        // 예: fetchChat(beforeMessageId); 
+    
+        // 임시로 fetchChat 실행 (실제로는 이전 데이터를 불러와서 prepend 해야 함)
+        await fetchChat(true); 
+    }
 
     // 🐧 마크다운 파서 최적화 버전
     function parseDiscordMarkdown(text) {
@@ -188,6 +208,7 @@
         // 7. [중요] 일반 # 텍스트가 헤더로 오인받지 않게 정리 후 줄바꿈
         return html.replace(/\n/g, '<br>');
     }
+    
 
     window.onload = () => {
         if (!localStorage.getItem('discord_token')) {
