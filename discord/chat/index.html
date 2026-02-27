@@ -119,7 +119,30 @@
     let currentChannelId = CHANNELS[0].id;
     let lastMessageId = null;
     const MAX_MINUTES = 300;
-
+    // 🐧 디스코드 마크다운 & 이모지 변환기
+    function parseDiscordMarkdown(text) {
+        if (!text) return "";
+    
+        return text
+            // 1. 굵게 (**text**)
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            // 2. 기울임 (*text* 또는 _text_)
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/_(.*?)_/g, '<em>$1</em>')
+            // 3. 취소선 (~~text~~)
+            .replace(/~~(.*?)~~/g, '<del>$1</del>')
+            // 4. 코드 블록 (`text`)
+            .replace(/`(.*?)`/g, '<code style="background: #2b2d31; padding: 2px 4px; border-radius: 4px; font-family: monospace;">$1</code>')
+            // 5. 인용문 (> text)
+            .replace(/^> (.*)$/gm, '<blockquote style="border-left: 4px solid #4e5058; padding-left: 10px; margin: 5px 0; color: #b5bac1;">$1</blockquote>')
+            // 6. 이모지 처리 (간단한 예시: :smile: -> 😊)
+            // 실제 디스코드 커스텀 이모지는 <:_name_:ID> 형식이지만 일단 기본 이모지 텍스트 대응
+            .replace(/:smile:/g, '😊')
+            .replace(/:wink:/g, '😉')
+            .replace(/:heart:/g, '❤️')
+            .replace(/:penguin:/g, '🐧')
+            .replace(/:check:/g, '✅');
+    }
     window.onload = () => {
         if (!localStorage.getItem('discord_token')) {
             alert("🚨 로그인한 펭귄만 들어올 수 있습니다!");
