@@ -126,18 +126,32 @@
 
 <script>
     const CHANNELS = [
-        { name: "공지", id: "1472091143863799849", canSend: false, fullHistory: true },
-        { name: "이벤트", id: "1472807840740540447", canSend: false, fullHistory: true },
-        { name: "역할", id: "1472867165815177389", canSend: false, fullHistory: true },
-        { name: "규칙", id: "1472870887299743774", canSend: false, fullHistory: true },
-        { name: "채팅", id: "1472090209276395694", canSend: true, fullHistory: false },
-        { name: "일상", id: "1472868706760523978", canSend: true, fullHistory: false },
-        { name: "채팅회의", id: "1472838561505083522", canSend: true, fullHistory: false }
+        { name: "공지", id: "1472091143863799849", canSend: false, maxMore: Infinity },
+        { name: "이벤트", id: "1472807840740540447", canSend: false, maxMore: Infinity },
+        { name: "역할", id: "1472867165815177389", canSend: false, maxMore: Infinity },
+        { name: "규칙", id: "1472870887299743774", canSend: false, maxMore: Infinity },
+        { name: "채팅", id: "1472090209276395694", canSend: true, maxMore: 3 },
+        { name: "일상", id: "1472868706760523978", canSend: true, maxMore: 3 },
+        { name: "채팅회의", id: "1472838561505083522", canSend: true, maxMore: 3 }
     ];
+    let moreCount = 0;
 
     let currentChannelId = CHANNELS[0].id;
     let lastMessageId = null;
     const MAX_MINUTES = 300;
+    // switchChannel 함수나 초기 로딩 시 호출
+    function renderMoreButton() {
+        const chatLog = document.getElementById('chat-log');
+        const existingBtn = document.getElementById('load-more-btn');
+        if (existingBtn) existingBtn.remove(); // 기존 버튼 제거
+    
+        const btn = document.createElement('button');
+        btn.id = 'load-more-btn';
+        btn.innerText = "⬆️ 이전 메시지 더 보기";
+        btn.style = "width: 100%; padding: 10px; background: #383a40; color: #b5bac1; border: none; cursor: pointer; margin-bottom: 10px; border-radius: 4px;";
+        btn.onclick = loadMoreMessages;
+        chatLog.prepend(btn); // 채팅창 맨 위에 추가
+    }
 
     // 🐧 마크다운 파서 최적화 버전
     function parseDiscordMarkdown(text) {
