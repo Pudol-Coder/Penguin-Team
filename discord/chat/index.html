@@ -97,6 +97,17 @@
         <button class="send-btn" onclick="sendNotice()">전송</button>
     </div>
 </div>
+<div style="display: flex; height: calc(100vh - 50px);">
+    <nav id="sidebar" style="width: 200px; background: #2b2d31; border-right: 1px solid #1e1f22; padding: 10px;">
+        <div style="color: #80848e; font-size: 0.7rem; font-weight: bold; margin-bottom: 10px; padding-left: 10px;">채널 목록</div>
+        <div id="channel-list"></div>
+    </nav>
+
+    <main style="flex: 1; display: flex; flex-direction: column;">
+        <div id="chat-log"></div>
+        <div class="input-area">...</div>
+    </main>
+</div>
 
 <script>
     let lastMessageId = null;
