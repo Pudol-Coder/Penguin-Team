@@ -180,32 +180,39 @@
             const response = await fetch(`/api/get-chat?channelId=${currentChannelId}`);
             if (!response.ok) return;
             const data = await response.json();
-            
+        
             // API 응답 구조에 맞춰 수정 (서버에서 channelName을 주면 업데이트)
             if (data.channelName) document.getElementById('current-channel-name').innerText = data.channelName;
             
             const messages = data.messages || data; // 서버 응답이 배열일 경우 대비
             const chatLog = document.getElementById('chat-log');
-
+    
             if (messages.length > 0 && messages[messages.length - 1].id !== lastMessageId) {
                 chatLog.innerHTML = '';
                 messages.reverse().forEach(msg => {
                     addMessageToUI(msg.username, msg.content, msg.avatar);
-                });
-                lastMessageId = messages[0].id;
-                chatLog.scrollTop = chatLog.scrollHeight;
-            }
+                 });
+                 lastMessageId = messages[0].id;
+                 chatLog.scrollTop = chatLog.scrollHeight;
+             }
         } catch (err) { console.error("채팅 로딩 실패:", err); }
     }
 
     function addMessageToUI(name, msg, img) {
         const log = document.getElementById('chat-log');
+        
+        // 🐧 마크다운 적용!
+        const htmlContent = parseDiscordMarkdown(msg);
+    
         log.innerHTML += `
             <div class="msg-box">
                 <img src="${img}" class="avatar" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3588/3588612.png'">
                 <div class="msg-content">
-                    <span class="user-name">${name}</span>
-                    <span class="text">${msg}</span>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span class="user-name">${name}</span>
+                        <span style="font-size: 0.7rem; color: #949ba4;">오늘</span>
+                    </div>
+                    <div class="text">${htmlContent}</div>
                 </div>
             </div>`;
     }
