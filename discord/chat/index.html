@@ -142,46 +142,37 @@
     // 🐧 마크다운 파서 최적화 버전
     function parseDiscordMarkdown(text) {
         if (!text) return "";
-
-        // 1. 보안을 위한 HTML 이스케이프 (태그 주입 방지)
+    
+        // 1. 보안을 위해 HTML 특수문자부터 무력화
         let html = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-
-        // 2. 디스코드 커스텀 이모지/멘션 정리 (<:name:id> 등)
+    
+        // 2. [중요] 헤더 처리 (줄 시작 부분에서만 작동하도록 엄격하게 제한)
+        // 스타일 코드가 텍스트로 노출되지 않도록 구조 변경
+        html = html.replace(/^### (.*$)/gm, '<h3 style="all:revert; font-size: 1rem; color: #ffffff; margin: 4px 0;">$1</h3>')
+                   .replace(/^## (.*$)/gm, '<h2 style="all:revert; font-size: 1.15rem; color: #ffffff; margin: 6px 0;">$1</h2>')
+                   .replace(/^# (.*$)/gm, '<h1 style="all:revert; font-size: 1.4rem; color: #ffffff; margin: 10px 0; border-bottom: 1px solid #3f4147;">$1</h1>');
+    
+        // 3. 디스코드 전용 객체 처리 (이모지, 채널 ID 등) - 숫자가 텍스트로 안 나오게 삭제/변환
         html = html.replace(/&lt;a?:\w+:(\d+)&gt;/g, '🐧')
                    .replace(/&lt;@!?(\d+)&gt;/g, '<span style="color: #c9cdfb; background: rgba(88,101,242,0.3); padding: 0 2px; border-radius: 3px;">@멘션</span>')
                    .replace(/&lt;#(\d+)&gt;/g, '<span style="color: #dbdee1; background: rgba(255,255,255,0.1); padding: 0 2px; border-radius: 3px;">#채널</span>');
 
-        return html
-            // 하이퍼링크 [제목](링크)
-            .replace(/\[(.*?)\]\(&lt;(https?:\/\/.*?)&gt;\)/g, '<a href="$2" target="_blank" style="color: #00a8fc; text-decoration: none;">$1</a>')
-            .replace(/\[(.*?)\]\((https?:\/\/.*?)\)/g, '<a href="$2" target="_blank" style="color: #00a8fc; text-decoration: none;">$1</a>')
-            
-            // 헤더 시리즈
-            .replace(/^### (.*$)/gm, '<h3 style="font-size: 1rem; color: #ffffff; margin: 4px 0;">$1</h3>')
-            .replace(/^## (.*$)/gm, '<h2 style="font-size: 1.15rem; color: #ffffff; margin: 6px 0;">$1</h2>')
-            .replace(/^# (.*$)/gm, '<h1 style="font-size: 1.4rem; color: #ffffff; margin: 10px 0; border-bottom: 1px solid #3f4147;">$1</h1>')
-            
-            // 미니 헤더 (-# text)
-            .replace(/^-# (.*$)/gm, '<div style="font-size: 0.8rem; color: #949ba4; font-weight: bold; margin-top: 4px;">$1</div>')
+        // 4. 하이퍼링크 (가장 먼저 처리해서 다른 규칙이랑 안 겹치게 함)
+        html = html.replace(/\[(.*?)\]\(&lt;(https?:\/\/.*?)&gt;\)/g, '<a href="$2" target="_blank" style="color: #00a8fc; text-decoration: none;">$1</a>')
+                   .replace(/\[(.*?)\]\((https?:\/\/.*?)\)/g, '<a href="$2" target="_blank" style="color: #00a8fc; text-decoration: none;">$1</a>');
 
-            // 스포 방지 (||text||)
-            .replace(/\|\|(.*?)\|\|/g, '<span class="spoiler" onclick="this.classList.toggle(\'revealed\')">$1</span>')
+        // 5. 스포일러 (||)
+        html = html.replace(/\|\|(.*?)\|\|/g, '<span class="spoiler" onclick="this.classList.toggle(\'revealed\')">$1</span>');
+    
+        // 6. 강조 및 기타 (문자열 중간에 섞인 것들)
+        html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                   .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                   .replace(/~~(.*?)~~/g, '<del>$1</del>')
+                   .replace(/^-# (.*$)/gm, '<div style="font-size: 0.82rem; color: #949ba4; font-weight: bold; margin-top: 2px;">$1</div>')
+                   .replace(/`(.*?)`/g, '<code style="background: #2b2d31; padding: 2px 4px; border-radius: 4px; font-family: monospace;">$1</code>');
 
-            // 기본 스타일 (Bold, Italic, Strike)
-            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-            .replace(/\*(.*?)\*/g, '<em>$1</em>')
-            .replace(/~~(.*?)~~/g, '<del>$1</del>')
-            .replace(/`(.*?)`/g, '<code style="background: #2b2d31; padding: 2px 4px; border-radius: 4px; font-family: monospace;">$1</code>')
-
-            // 리스트
-            .replace(/^- (.*$)/gm, '<div style="display: flex; gap: 8px; margin-left: 10px;"><span style="color: #949ba4;">•</span><span>$1</span></div>')
-
-            // 멘션/채널 수동 입력 (@이름, #채널명)
-            .replace(/@([a-zA-Z0-9가-힣]+)/g, '<span style="color: #c9cdfb; background: rgba(88,101,242,0.3); padding: 0 2px; border-radius: 3px;">@$1</span>')
-            .replace(/#([a-zA-Z0-9가-힣-]+)/g, '<span style="color: #dbdee1; background: rgba(255,255,255,0.1); padding: 0 2px; border-radius: 3px;">#$1</span>')
-
-            // 줄바꿈
-            .replace(/\n/g, '<br>');
+        // 7. [중요] 일반 # 텍스트가 헤더로 오인받지 않게 정리 후 줄바꿈
+        return html.replace(/\n/g, '<br>');
     }
 
     window.onload = () => {
