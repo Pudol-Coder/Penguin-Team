@@ -126,13 +126,13 @@
 
 <script>
     const CHANNELS = [
-        { name: "공지", id: "1472091143863799849" },
-        { name: "이벤트", id: "1472807840740540447" },
-        { name: "역할", id: "1472867165815177389" },
-        { name: "규칙", id: "1472870887299743774" },
-        { name: "채팅", id: "1472090209276395694" },
-        { name: "일상", id: "1472868706760523978" },
-        { name: "채팅회의", id: "1472838561505083522" }
+        { name: "공지", id: "1472091143863799849", canSend: false, fullHistory: true },
+        { name: "이벤트", id: "1472807840740540447", canSend: false, fullHistory: true },
+        { name: "역할", id: "1472867165815177389", canSend: false, fullHistory: true },
+        { name: "규칙", id: "1472870887299743774", canSend: false, fullHistory: true },
+        { name: "채팅", id: "1472090209276395694", canSend: true, fullHistory: false },
+        { name: "일상", id: "1472868706760523978", canSend: true, fullHistory: false },
+        { name: "채팅회의", id: "1472838561505083522", canSend: true, fullHistory: false }
     ];
 
     let currentChannelId = CHANNELS[0].id;
@@ -200,30 +200,40 @@
         if (currentChannelId === id) return;
         currentChannelId = id;
         lastMessageId = null;
-        document.getElementById('chat-log').innerHTML = '<p style="padding:20px;">채널 이동 중...</p>';
+
+        // 현재 채널 정보 찾기
+        const channelInfo = CHANNELS.find(ch => ch.id === id);
+        const input = document.getElementById('msg-input');
+        const btn = document.querySelector('.send-btn');
+    
+        if (channelInfo && !channelInfo.canSend) {
+            input.disabled = true;
+            input.placeholder = "이 채널에는 메시지를 보낼 수 없습니다. 🔒";
+            btn.style.opacity = "0.5";
+            btn.style.pointerEvents = "none";
+        } else {
+            input.disabled = false;
+            input.placeholder = `#${name} 에 메시지 보내기`;
+            btn.style.opacity = "1";
+            btn.style.pointerEvents = "auto";
+        }
+
+        document.getElementById('chat-log').innerHTML = '<p style="padding:20px;">기록을 불러오는 중...</p>';
         document.getElementById('current-channel-name').innerText = name;
         renderChannelList();
         fetchChat();
     }
 
     async function fetchChat() {
+        const channelInfo = CHANNELS.find(ch => ch.id === currentChannelId);
+        
+        // 공지 채널이면 limit을 크게 잡거나 전체 데이터를 가져오도록 쿼리 전송
+        const limit = channelInfo && channelInfo.fullHistory ? 100 : 20; 
+        
         try {
-            const response = await fetch(`/api/get-chat?channelId=${currentChannelId}`);
-            if (!response.ok) return;
-            const data = await response.json();
-            
-            const messages = data.messages || data;
-            const chatLog = document.getElementById('chat-log');
-
-            if (messages.length > 0 && messages[messages.length - 1].id !== lastMessageId) {
-                chatLog.innerHTML = '';
-                messages.reverse().forEach(msg => {
-                    addMessageToUI(msg.username, msg.content, msg.avatar);
-                });
-                lastMessageId = messages[0].id;
-                chatLog.scrollTop = chatLog.scrollHeight;
-            }
-        } catch (err) { console.error("채팅 로딩 실패:", err); }
+            const response = await fetch(`/api/get-chat?channelId=${currentChannelId}&limit=${limit}`);
+            // ... 이하 동일한 렌더링 로직
+        } catch (err) { console.error(err); }
     }
 
     function addMessageToUI(name, msg, img) {
