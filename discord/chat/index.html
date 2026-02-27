@@ -103,34 +103,45 @@
     // 마크다운 파서 (태그 노출 방지 핵심 로직)
     function parseDiscordMarkdown(text) {
         if (!text) return "";
+    
+        // 1. 기본 보안: HTML 특수문자 치환 (순서가 중요!)
         let html = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-
-        // 이모지 변환
+    
+        // 2. [최우선] 이미지 링크 프리뷰 (다른 태그에 간섭받지 않게 먼저 분리)
+        const imgRegex = /(https?:\/\/[^\s]+?\.(?:jpg|jpeg|png|gif|webp)(?:\?[^\s]*)?)/gi;
+        html = html.replace(imgRegex, (url) => `<div style="margin-top:8px;"><img src="${url}" style="max-width:100%; border-radius:8px; border:1px solid #444;"></div>`);
+    
+        // 3. [이모지] 커스텀 이모지 처리
         html = html.replace(/&lt;a?:(\w+):(\d+)&gt;/g, (m, name, id) => {
             const ext = m.includes('&lt;a:') ? 'gif' : 'png';
-            return `<img src="https://cdn.discordapp.com/emojis/${id}.${ext}" class="emoji" title=":${name}:">`;
+            return `<img src="https://cdn.discordapp.com/emojis/${id}.${ext}" class="emoji" title=":${name}:" style="width:22px; height:22px; vertical-align:middle; margin:0 2px;">`;
         });
 
-        // 이미지 링크 프리뷰
-        const imgRegex = /(https?:\/\/[^\s]+?\.(?:jpg|jpeg|png|gif|webp)(?:\?[^\s]*)?)/gi;
-        html = html.replace(imgRegex, (url) => `<div><img src="${url}"></div>`);
+        // 4. [강조 스타일] 중첩 방지를 위해 굵게/기울임 처리
+        // 굵게 (**text**)
+        html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        // 기울임 (*text* 또는 _text_)
+        html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+        // 취소선 (~~text~~)
+        html = html.replace(/~~(.*?)~~/g, '<del>$1</del>');
+        // 코드 블록 (`text`)
+        html = html.replace(/`(.*?)`/g, '<code style="background:#2b2d31; padding:2px 4px; border-radius:4px; font-family:monospace;">$1</code>');
 
-        // 강조 스타일 (심플하게 수정)
-        html = html.replace(/^### (.*$)/gm, '<h3 style="color:#fff;margin:5px 0;">$1</h3>')
-                   .replace(/^## (.*$)/gm, '<h2 style="color:#fff;margin:8px 0;">$1</h2>')
-                   .replace(/^# (.*$)/gm, '<h1 style="color:#fff;margin:12px 0;border-bottom:1px solid #444;">$1</h1>')
-                   .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                   .replace(/\|\|(.*?)\|\|/g, '<span class="spoiler" onclick="this.classList.toggle(\'revealed\')">$1</span>')
-                   .replace(/`(.*?)`/g, '<code style="background:#2b2d31;padding:2px 4px;border-radius:4px;">$1</code>');
+        // 5. [헤더] 줄 시작 부분의 # 처리 (멀티라인 플래그 활용)
+        html = html.replace(/^### (.*$)/gm, '<h3 style="color:#fff; margin:10px 0 5px 0;">$1</h3>')
+                   .replace(/^## (.*$)/gm, '<h2 style="color:#fff; margin:15px 0 8px 0;">$1</h2>')
+                   .replace(/^# (.*$)/gm, '<h1 style="color:#fff; margin:20px 0 10px 0; border-bottom:1px solid #444; padding-bottom:5px;">$1</h1>');
 
-        // 멘션
-        html = html.replace(/&lt;@!?(\d+)&gt;/g, '<span style="color:#c9cdfb;background:rgba(88,101,242,0.3);padding:0 2px;border-radius:3px;">@멘션</span>')
-                   .replace(/&lt;#(\d+)&gt;/g, '<span style="color:#dbdee1;background:rgba(255,255,255,0.1);padding:0 2px;border-radius:3px;">#채널</span>')
-                   .replace(/@everyone/g, '<span style="color:#c9cdfb;background:rgba(88,101,242,0.3);padding:0 2px;border-radius:3px;">@everyone</span>');
+        // 6. [특수 기능] 스포일러 및 멘션
+        html = html.replace(/\|\|(.*?)\|\|/g, '<span class="spoiler" onclick="this.classList.toggle(\'revealed\')" style="background:#222; color:transparent; cursor:pointer; padding:0 2px; border-radius:3px;">$1</span>');
+        html = html.replace(/&lt;@!?(\d+)&gt;/g, '<span style="color:#c9cdfb; background:rgba(88,101,242,0.3); padding:0 2px; border-radius:3px; font-weight:500;">@멘션</span>')
+                   .replace(/&lt;#(\d+)&gt;/g, '<span style="color:#dbdee1; background:rgba(255,255,255,0.1); padding:0 2px; border-radius:3px;">#채널</span>')
+                   .replace(/@everyone/g, '<span style="color:#c9cdfb; background:rgba(88,101,242,0.3); padding:0 2px; border-radius:3px; font-weight:500;">@everyone</span>')
+                   .replace(/@here/g, '<span style="color:#c9cdfb; background:rgba(88,101,242,0.3); padding:0 2px; border-radius:3px; font-weight:500;">@here</span>');
 
+        // 7. [줄바꿈] 마지막에 \n을 <br>로 변환
         return html.replace(/\n/g, '<br>');
     }
-
     async function fetchChat(isMore = false) {
         if (isAFK) return;
         const chatLog = document.getElementById('chat-log');
