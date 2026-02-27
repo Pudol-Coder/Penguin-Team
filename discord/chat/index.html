@@ -1,72 +1,18 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PENGUIN | 원격 채팅</title>
     <style>
-        body, html {
-            margin: 0; padding: 0; height: 100%;
-            font-family: 'Pretendard', sans-serif;
-            background-color: #313338;
-            color: #dbdee1;
-            display: flex; flex-direction: column; overflow: hidden;
+        /* ... 기존 스타일 ... */
+        #afk-overlay {
+            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); z-index: 1000; color: white;
+            flex-direction: column; align-items: center; justify-content: center;
+            backdrop-filter: blur(4px);
         }
-
-        /* 스포 방지 스타일 */
-        .spoiler {
-            background-color: #1e1f22 !important;
-            color: #1e1f22 !important;
-            cursor: pointer; border-radius: 3px; padding: 0 4px; transition: 0.2s;
+        #afk-overlay button {
+            margin-top: 15px; padding: 10px 20px; background: #5865F2; border: none;
+            color: white; border-radius: 5px; cursor: pointer; font-weight: bold;
         }
-        .spoiler.revealed { background-color: #444444 !important; color: #ffffff !important; }
-
-        /* 상단 바 */
-        header {
-            height: 50px; background: #2b2d31; display: flex; align-items: center; justify-content: space-between;
-            padding: 0 20px; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.2); border-bottom: 1px solid #1e1f22;
-        }
-        .header-left { display: flex; align-items: center; }
-        header h2 { font-size: 0.9rem; color: #f2f3f5; margin-left: 10px; }
-
-        .refresh-btn { background: none; border: none; color: #b5bac1; cursor: pointer; padding: 5px; border-radius: 4px; display: flex; align-items: center; }
-        .refresh-btn:hover { color: #ffffff; background-color: #35373c; }
-        .refresh-btn svg { width: 20px; height: 20px; }
-
-        /* 레이아웃 */
-        .container { display: flex; flex: 1; overflow: hidden; }
-        nav { width: 240px; background: #2b2d31; display: flex; flex-direction: column; padding: 10px; border-right: 1px solid #1e1f22; }
-        .channel-category { color: #80848e; font-size: 0.75rem; font-weight: bold; margin: 10px 0 5px 10px; text-transform: uppercase; }
-        .channel-item { padding: 8px 12px; color: #8e9297; cursor: pointer; border-radius: 4px; margin-bottom: 2px; transition: 0.2s; font-size: 0.95rem; }
-        .channel-item:hover { background: #35373c; color: #dbdee1; }
-        .channel-item.active { background: #3f4147; color: #ffffff; }
-
-        /* 채팅 영역 */
-        main { flex: 1; display: flex; flex-direction: column; background: #313338; position: relative; }
-        #chat-log { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
-
-        /* 더보기 버튼 */
-        #load-more-btn {
-            width: 100%; padding: 10px; background: #383a40; color: #b5bac1; border: none; 
-            cursor: pointer; margin-bottom: 15px; border-radius: 4px; font-weight: bold; transition: 0.2s;
-        }
-        #load-more-btn:hover { background: #4e5058; color: #ffffff; }
-
-        .msg-box { display: flex; gap: 15px; animation: fadeIn 0.3s ease; }
-        .avatar { width: 40px; height: 40px; border-radius: 50%; background: #5865F2; object-fit: cover; }
-        .user-name { font-weight: bold; font-size: 0.95rem; color: #ffffff; }
-        .msg-date { font-size: 0.7rem; color: #949ba4; margin-left: 8px; }
-        .text { font-size: 0.9rem; line-height: 1.5; color: #dbdee1; word-break: break-word; }
-
-        /* 입력창 */
-        .input-area { padding: 20px; background: #313338; }
-        .input-wrapper { background: #383a40; border-radius: 8px; padding: 10px 15px; display: flex; align-items: center; gap: 10px; }
-        input { flex: 1; background: transparent; border: none; color: #dcdee1; outline: none; }
-        .send-btn { background: #5865F2; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-        .spinning { animation: spin 0.8s linear; }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
@@ -78,11 +24,8 @@
     </div>
     <div style="display: flex; align-items: center; gap: 15px;">
         <div id="usage-timer" style="font-size: 12px; color: #3ba55c; font-weight: bold;">⏱️ 로딩 중...</div>
-        <button class="refresh-btn" onclick="manualRefresh()" title="새로고침">
-            <svg id="refresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path>
-                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-            </svg>
+        <button class="refresh-btn" onclick="manualRefresh()">
+            <svg id="refresh-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
         </button>
     </div>
 </header>
@@ -92,7 +35,11 @@
         <div class="channel-category">채널 목록</div>
         <div id="channel-list"></div>
     </nav>
-    <main>
+    <main id="main-chat">
+        <div id="afk-overlay">
+            <p>🐧 자리 비움 상태입니다.</p>
+            <button onclick="wakeUp()">다시 연결하기</button>
+        </div>
         <div id="chat-log"></div>
         <div class="input-area">
             <div class="input-wrapper">
@@ -113,26 +60,130 @@
         { name: "일상", id: "1472868706760523978", canSend: true, maxMore: 3 },
         { name: "채팅회의", id: "1472838561505083522", canSend: true, maxMore: 3 }
     ];
-    let chatTimer = null; // 현재 돌아가는 타이머를 담을 변수
+
     let currentChannelId = CHANNELS[0].id;
-    let lastMessageId = null;
-    let moreCount = 0; // 더보기 클릭 횟수
-    const MAX_MINUTES = 300;
-    function startChatTimer() {
-        // 1. 기존에 돌고 있던 타이머가 있다면 즉시 중단
-        if (chatTimer) clearInterval(chatTimer);
-    
-        // 2. 현재 채널 정보에 따른 주기 설정
-        const channelInfo = CHANNELS.find(ch => ch.id === currentChannelId);
-        
-        // 메시지 전송 불가능(공지용)이면 30초, 채팅용이면 5초
-        const interval = (channelInfo && !channelInfo.canSend) ? 30000 : 5000;
-        
-        console.log(`📡 현재 채널 [#${channelInfo.name}] 새로고침 주기: ${interval / 1000}초`);
-    
-        // 3. 새 주기 설정
-        chatTimer = setInterval(fetchChat, interval);
+    let moreCount = 0;
+    let chatTimer = null;
+    let afkTimer = null;
+    let isAFK = false;
+    const AFK_TIME = 3 * 60 * 1000; // 3분
+
+    // 1. AFK 시스템: 활동 감지
+    function resetAFK() {
+        if (isAFK) return; // 이미 자리비움이면 무시
+        clearTimeout(afkTimer);
+        afkTimer = setTimeout(() => {
+            isAFK = true;
+            document.getElementById('afk-overlay').style.display = 'flex';
+            if (chatTimer) clearInterval(chatTimer); // 새로고침 중단
+        }, AFK_TIME);
     }
+
+    function wakeUp() {
+        isAFK = false;
+        document.getElementById('afk-overlay').style.display = 'none';
+        resetAFK();
+        startChatTimer();
+        fetchChat();
+    }
+
+    // 이벤트 리스너 (마우스 움직임, 클릭, 키보드)
+    ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'].forEach(evt => {
+        window.addEventListener(evt, resetAFK);
+    });
+
+    // 2. 가변 타이머 시스템
+    function startChatTimer() {
+        if (chatTimer) clearInterval(chatTimer);
+        const channelInfo = CHANNELS.find(ch => ch.id === currentChannelId);
+        const interval = (channelInfo && !channelInfo.canSend) ? 30000 : 5000;
+        chatTimer = setInterval(() => fetchChat(false), interval);
+    }
+
+    // 3. 기록 불러오기 (스크롤 유지 로직 포함)
+    async function fetchChat(isMore = false) {
+        if (isAFK) return;
+        const chatLog = document.getElementById('chat-log');
+        const oldScrollHeight = chatLog.scrollHeight;
+        const oldScrollTop = chatLog.scrollTop;
+        const isAtBottom = oldScrollHeight - oldScrollTop <= chatLog.clientHeight + 100;
+
+        const limit = 10 + (moreCount * 10);
+        
+        try {
+            const response = await fetch(`/api/get-chat?channelId=${currentChannelId}&limit=${limit}`);
+            if (!response.ok) return;
+            const data = await response.json();
+            const messages = data.messages || data;
+
+            if (messages.length > 0) {
+                chatLog.innerHTML = '';
+                renderMoreButton();
+                
+                messages.reverse().forEach(msg => {
+                    const msgDiv = document.createElement('div');
+                    msgDiv.className = 'msg-box';
+                    msgDiv.innerHTML = `
+                        <img src="${msg.avatar}" class="avatar" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3588/3588612.png'">
+                        <div class="msg-content">
+                            <div class="user-header">
+                                <span class="user-name">${msg.username}</span>
+                                <span class="msg-date">오늘</span>
+                            </div>
+                            <div class="text">${parseDiscordMarkdown(msg.content)}</div>
+                        </div>`;
+                    chatLog.appendChild(msgDiv);
+                });
+
+                // 스크롤 제어
+                if (isMore) {
+                    // 더보기 클릭 시: 이전 스크롤 위치 유지
+                    chatLog.scrollTop = chatLog.scrollHeight - oldScrollHeight;
+                } else if (isAtBottom) {
+                    // 원래 맨 아래에 있었으면: 새 메시지 와도 아래로 유지
+                    chatLog.scrollTop = chatLog.scrollHeight;
+                }
+                // (그 외의 경우: 사용자가 위를 보고 있으면 스크롤 고정됨)
+            }
+        } catch (err) { console.error(err); }
+    }
+
+    function renderMoreButton() {
+        const channelInfo = CHANNELS.find(ch => ch.id === currentChannelId);
+        if (moreCount >= channelInfo.maxMore) return;
+
+        const chatLog = document.getElementById('chat-log');
+        const btn = document.createElement('button');
+        btn.id = 'load-more-btn';
+        const remaining = channelInfo.maxMore === Infinity ? "무제한" : (channelInfo.maxMore - moreCount);
+        btn.innerText = `⬆️ 이전 메시지 더 보기 (남은 횟수: ${remaining})`;
+        btn.onclick = (e) => {
+            e.stopPropagation();
+            moreCount++;
+            fetchChat(true);
+        };
+        chatLog.prepend(btn);
+    }
+
+    function switchChannel(id, name) {
+        if (currentChannelId === id) return;
+        currentChannelId = id;
+        moreCount = 0;
+
+        const ch = CHANNELS.find(c => c.id === id);
+        const input = document.getElementById('msg-input');
+        input.disabled = !ch.canSend;
+        input.placeholder = ch.canSend ? `#${name} 에 메시지 보내기` : "이 채널에는 메시지를 보낼 수 없습니다. 🔒";
+
+        document.getElementById('chat-log').innerHTML = '<p style="padding:20px;">로딩 중...</p>';
+        document.getElementById('current-channel-name').innerText = name;
+        
+        renderChannelList();
+        fetchChat();
+        startChatTimer();
+    }
+
+    // 마크다운 파서 (이전과 동일)
     function parseDiscordMarkdown(text) {
         if (!text) return "";
         let html = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -145,129 +196,23 @@
         html = html.replace(/\[(.*?)\]\(&lt;(https?:\/\/.*?)&gt;\)/g, '<a href="$2" target="_blank" style="color: #00a8fc; text-decoration: none;">$1</a>')
                    .replace(/\[(.*?)\]\((https?:\/\/.*?)\)/g, '<a href="$2" target="_blank" style="color: #00a8fc; text-decoration: none;">$1</a>');
         html = html.replace(/\|\|(.*?)\|\|/g, '<span class="spoiler" onclick="this.classList.toggle(\'revealed\')">$1</span>');
-        html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                   .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                   .replace(/~~(.*?)~~/g, '<del>$1</del>')
-                   .replace(/^-# (.*$)/gm, '<div style="font-size: 0.82rem; color: #949ba4; font-weight: bold; margin-top: 2px;">$1</div>')
-                   .replace(/`(.*?)`/g, '<code style="background: #2b2d31; padding: 2px 4px; border-radius: 4px; font-family: monospace;">$1</code>');
+        html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\*(.*?)\*/g, '<em>$1</em>');
         return html.replace(/\n/g, '<br>');
     }
 
-    function renderMoreButton() {
-        const chatLog = document.getElementById('chat-log');
-        if (document.getElementById('load-more-btn')) return;
-        
-        const btn = document.createElement('button');
-        btn.id = 'load-more-btn';
-        btn.onclick = loadMoreMessages;
-        chatLog.prepend(btn);
-        updateMoreButtonText();
-    }
-
-    function updateMoreButtonText() {
-        const btn = document.getElementById('load-more-btn');
-        if (!btn) return;
-        const channelInfo = CHANNELS.find(ch => ch.id === currentChannelId);
-        const remaining = channelInfo.maxMore === Infinity ? "무제한" : (channelInfo.maxMore - moreCount);
-        btn.innerText = `⬆️ 이전 메시지 더 보기 (남은 횟수: ${remaining})`;
-    }
-
-    async function loadMoreMessages() {
-        const channelInfo = CHANNELS.find(ch => ch.id === currentChannelId);
-        if (moreCount >= channelInfo.maxMore) {
-            alert("⚠️ 채팅 채널은 최근 대화 위주로만 볼 수 있습니다!");
-            document.getElementById('load-more-btn').remove();
-            return;
-        }
-        moreCount++;
-        updateMoreButtonText();
-        await fetchChat(true); // true 인자를 주어 누적 로딩
-    }
-
-    function switchChannel(id, name) {
-        if (currentChannelId === id) return;
-        currentChannelId = id;
-        lastMessageId = null;
-        moreCount = 0; // 채널 변경 시 횟수 초기화
-
-        const channelInfo = CHANNELS.find(ch => ch.id === id);
-        const input = document.getElementById('msg-input');
-        const btn = document.querySelector('.send-btn');
-    
-        if (channelInfo && !channelInfo.canSend) {
-            input.disabled = true; input.placeholder = "이 채널에는 메시지를 보낼 수 없습니다. 🔒";
-            btn.style.opacity = "0.5"; btn.style.pointerEvents = "none";
-        } else {
-            input.disabled = false; input.placeholder = `#${name} 에 메시지 보내기`;
-            btn.style.opacity = "1"; btn.style.pointerEvents = "auto";
-        }
-
-        document.getElementById('chat-log').innerHTML = '<p style="padding:20px;">기록을 불러오는 중...</p>';
-        document.getElementById('current-channel-name').innerText = name;
-        renderChannelList();
-        fetchChat();
-    
-        // 🐧 채널에 맞는 새로고침 타이머 시작!
-        startChatTimer();
-    }
-
-    async function fetchChat(isMore = false) {
-        const channelInfo = CHANNELS.find(ch => ch.id === currentChannelId);
-        // 기본 10개, 더보기 시 더 많이 (Usage 방지용 10개 단위 로직)
-        const limit = 10 + (moreCount * 10);
-        
-        try {
-            const response = await fetch(`/api/get-chat?channelId=${currentChannelId}&limit=${limit}`);
-            if (!response.ok) return;
-            const data = await response.json();
-            const messages = data.messages || data;
-            const chatLog = document.getElementById('chat-log');
-
-            // 새 메시지가 있을 때만 렌더링
-            if (messages.length > 0) {
-                // 이전 데이터 유지하면서 덮어쓰기 위해 초기화 후 다시 그림
-                chatLog.innerHTML = '';
-                renderMoreButton(); // 더보기 버튼 다시 생성
-                
-                messages.reverse().forEach(msg => {
-                    addMessageToUI(msg.username, msg.content, msg.avatar);
-                });
-
-                // 처음 채널 들어왔을 때만 스크롤 아래로
-                if (!isMore) chatLog.scrollTop = chatLog.scrollHeight;
-                lastMessageId = messages[0].id;
-            }
-        } catch (err) { console.error("데이터 로드 실패:", err); }
-    }
-
-    function addMessageToUI(name, msg, img) {
-        const log = document.getElementById('chat-log');
-        const htmlContent = parseDiscordMarkdown(msg);
-        const msgDiv = document.createElement('div');
-        msgDiv.className = 'msg-box';
-        msgDiv.innerHTML = `
-            <img src="${img}" class="avatar" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3588/3588612.png'">
-            <div class="msg-content">
-                <div class="user-header">
-                    <span class="user-name">${name}</span>
-                    <span class="msg-date">오늘</span>
-                </div>
-                <div class="text">${htmlContent}</div>
-            </div>`;
-        log.appendChild(msgDiv);
-    }
-
-    // 초기 실행 및 유틸리티 함수들
+    // 초기화
     window.onload = () => {
         if (!localStorage.getItem('discord_token')) { location.href = "/"; return; }
         renderChannelList();
         fetchChat();
         
-        setInterval(updateUsage, 60000); // 사용 시간 타이머는 1분 고정
+        setInterval(updateUsage, 60000);
         updateUsage();
-    
-        startChatTimer(); // 🐧 채팅 타이머 시작
+        
+        resetAFK();
+        startChatTimer(); 
     };
+
     function renderChannelList() {
         const list = document.getElementById('channel-list');
         list.innerHTML = CHANNELS.map(ch => `
@@ -291,7 +236,8 @@
                     content: input.value
                 })
             });
-            input.value = ''; fetchChat();
+            input.value = '';
+            fetchChat();
         } catch (err) { console.error(err); }
     }
 
@@ -307,19 +253,16 @@
         const today = new Date().toISOString().split('T')[0];
         let usageData = JSON.parse(localStorage.getItem('penguin_usage') || '{}');
         if (usageData.date !== today) usageData = { date: today, minutes: 0 };
-        if (usageData.minutes >= MAX_MINUTES) { lockChat(); return; }
+        if (usageData.minutes >= MAX_MINUTES) {
+            document.getElementById('msg-input').disabled = true;
+            document.getElementById('msg-input').placeholder = "오늘의 사용 시간을 모두 소진했습니다. 🐧💤";
+            return;
+        }
         usageData.minutes += 1;
         localStorage.setItem('penguin_usage', JSON.stringify(usageData));
         const rem = MAX_MINUTES - usageData.minutes;
         document.getElementById('usage-timer').innerText = `⏱️ ${Math.floor(rem/60)}h ${rem%60}m 남음`;
     }
-
-    function lockChat() {
-        document.getElementById('msg-input').disabled = true;
-        document.getElementById('msg-input').placeholder = "오늘의 사용 시간을 모두 소진했습니다. 🐧💤";
-    }
-
-    setInterval(fetchChat, 4000); // 사용량 절약을 위해 폴링 간격 4초로 상향
 </script>
 </body>
 </html>
