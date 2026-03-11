@@ -1,22 +1,26 @@
-// api/send-chat.js
-export default async function handler(req, res) {
-    if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
+// 서버 코드 (Node.js 예시)
+app.post('/api/send-chat_default', async (req, res) => {
+    const { channelId, username, content, avatar_url } = req.body;
 
-    const { username, avatar_url, content } = req.body;
-    const WEBHOOK_URL = process.env.DISCORD_WEBHOOK_CHAT_URL;
+    // 🐧 채널별 웹후크 URL 매핑 (본인의 웹후크 주소로 채우세요)
+    const webhookUrls = {
+        "1472091143863799849": "https://discord.com/api/webhooks/공지_웹후크_주소",
+        "1472090209276395694": "https://discord.com/api/webhooks/채팅_웹후크_주소",
+        "1472868706760523978": "https://discord.com/api/webhooks/일상_웹후크_주소"
+    };
 
-    try {
-        await fetch(WEBHOOK_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                username: username, // [WEB] 닉네임이 여기로!
-                avatar_url: avatar_url,
-                content: content
-            })
-        });
-        res.status(200).json({ success: true });
-    } catch (error) {
-        res.status(500).json({ error: '전송 실패' });
+    const targetWebhook = webhookUrls[channelId];
+
+    if (!targetWebhook) {
+        return res.status(400).send("이 채널은 메시지 전송이 지원되지 않습니다.");
     }
-}
+
+    // 선택된 웹후크로 전송
+    await fetch(targetWebhook, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, content, avatar_url })
+    });
+
+    res.sendStatus(200);
+});
