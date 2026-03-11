@@ -4,9 +4,8 @@ app.post('/api/send-chat_default', async (req, res) => {
 
     // 🐧 채널별 웹후크 URL 매핑 (본인의 웹후크 주소로 채우세요)
     const webhookUrls = {
-        "1472091143863799849": "https://discord.com/api/webhooks/공지_웹후크_주소",
-        "1472090209276395694": "https://discord.com/api/webhooks/채팅_웹후크_주소",
-        "1472868706760523978": "https://discord.com/api/webhooks/일상_웹후크_주소"
+        "1479115722021011600": process.env.DISCORD_WEBHOOK_CHAT_URL,
+        "1479107523989602344": process.env.DISCORD_WEBHOOK_MEDIA_URL,
     };
 
     const targetWebhook = webhookUrls[channelId];
