@@ -161,7 +161,7 @@
         const input = document.getElementById('msg-input');
         if (!input.value.trim()) return;
         const user = JSON.parse(localStorage.getItem('user') || '{}');
-        await fetch('/api/send-chat', {
+        await fetch('/api/send-chat_default', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
