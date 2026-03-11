@@ -158,21 +158,40 @@
     }
 
     async function sendNotice() {
-        const content = document.getElementById('msg-input').value;
+        const input = document.getElementById('msg-input');
+        if (!input.value.trim()) return;
+    
+        // 1. 저장된 유저 정보 가져오기
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
         
-        // 직접 웹후크로 쏘는 게 아니라, 우리가 만든 /api/send-chat으로 쏩니다.
-        await fetch('/api/send-chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+        // 2. 닉네임과 아바타 URL 설정
+        const displayName = `[WEB] ${user.username || '익명의 펭귄'}`;
+        const displayAvatar = user.avatar 
+            ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` 
+            : 'https://cdn-icons-png.flaticon.com/512/3588/3588612.png';
+    
+        try {
+            const response = await fetch('/api/send-chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                content: content,
-                username: "PENGUIN BOT"
-            })
-        });
-        
-        document.getElementById('msg-input').value = '';
+                    channelId: currentChannelId, // 🐧 현재 내가 보고 있는 채널 ID
+                    username: displayName,
+                    avatar_url: displayAvatar,
+                    content: input.value
+                })
+            });
+    
+            if (response.ok) {
+                input.value = '';
+                fetchChat(); // 전송 성공 시 채팅창 새로고침
+            } else {
+                alert("전송 실패! 웹후크 설정을 확인하세요.");
+            }
+        } catch (e) {
+            console.error("전송 중 에러 발생:", e);
+        }
     }
-
     function handleEnter(e) { if (e.key === 'Enter') sendNotice(); }
 
     window.onload = () => {
