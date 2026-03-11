@@ -158,26 +158,19 @@
     }
 
     async function sendNotice() {
-        const input = document.getElementById('msg-input');
-        if (!input.value.trim()) return;
-    
-        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        const content = document.getElementById('msg-input').value;
         
-        // 현재 선택된 채널 ID(currentChannelId)를 정확히 서버에 보냅니다.
-        try {
-            await fetch('/api/send-chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+        // 직접 웹후크로 쏘는 게 아니라, 우리가 만든 /api/send-chat으로 쏩니다.
+        await fetch('/api/send-chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    channelId: currentChannelId, // 🐧 여기가 포인트!
-                    username: `[WEB] ${user.username}`,
-                    avatar_url: user.avatar ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png` : '',
-                    content: input.value
-                })
-            });
-            input.value = '';
-            fetchChat(); // 보낸 뒤 즉시 갱신
-        } catch (e) { console.error("전송 에러:", e); }
+                content: content,
+                username: "PENGUIN BOT"
+            })
+        });
+        
+        document.getElementById('msg-input').value = '';
     }
 
     function handleEnter(e) { if (e.key === 'Enter') sendNotice(); }
