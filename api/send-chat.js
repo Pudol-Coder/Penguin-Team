@@ -1,15 +1,30 @@
 export default async function handler(req, res) {
-    if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
+    if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
-    // 여기서 Vercel 대시보드에 적은 이름을 그대로 가져옵니다.
-    const WEBHOOK_MEDIA_URL = process.env.DISCORD_WEBHOOK_CHAT_URL;
-    const WEBHOOK_CHAT_URL = process.env.DISCORD_WEBHOOK_CHAT_URL;
+    const { channelId, username, content, avatar_url } = req.body;
+
+    // 🐧 채널 ID와 환경 변수 매핑 (Vercel에 등록한 Key 이름과 똑같이!)
+    const webhookKeys = {
+        "1479107523989602344": process.env.DISCORD_WEBHOOK_MEDIA_URL,
+        "1479115722021011600": process.env.DISCORD_WEBHOOK_CHAT_URL,
+        "1481278243116941465": process.env.DISCORD_WEBHOOK_MEETING_URL // 채팅회의 등
+    };
+
+    const targetWebhook = webhookKeys[channelId];
+
+    if (!targetWebhook) {
+        return res.status(400).json({ error: "이 채널은 전송이 설정되지 않았습니다." });
+    }
 
     try {
-        await fetch(WEBHOOK_CHAT_URL, {
+        await fetch(targetWebhook, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(req.body) // 클라이언트가 보낸 데이터 그대로 전달
+            body: JSON.stringify({
+                content: content,
+                username: username, // 🐧 연동된 닉네임 사용
+                avatar_url: avatar_url // 🐧 연동된 프로필 사진 사용
+            })
         });
         return res.status(200).json({ success: true });
     } catch (err) {
