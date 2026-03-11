@@ -1,25 +1,17 @@
-// 서버 코드 (Node.js 예시)
-app.post('/api/send-chat_default', async (req, res) => {
-    const { channelId, username, content, avatar_url } = req.body;
+export default async function handler(req, res) {
+    if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
 
-    // 🐧 채널별 웹후크 URL 매핑 (본인의 웹후크 주소로 채우세요)
-    const webhookUrls = {
-        "1479115722021011600": process.env.DISCORD_WEBHOOK_CHAT_URL,
-        "1479107523989602344": process.env.DISCORD_WEBHOOK_MEDIA_URL,
-    };
+    // 여기서 Vercel 대시보드에 적은 이름을 그대로 가져옵니다.
+    const WEBHOOK_URL = process.env.DISCORD_WEBHOOK_CHAT_URL;
 
-    const targetWebhook = webhookUrls[channelId];
-
-    if (!targetWebhook) {
-        return res.status(400).send("이 채널은 메시지 전송이 지원되지 않습니다.");
+    try {
+        await fetch(WEBHOOK_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(req.body) // 클라이언트가 보낸 데이터 그대로 전달
+        });
+        return res.status(200).json({ success: true });
+    } catch (err) {
+        return res.status(500).json({ error: err.message });
     }
-
-    // 선택된 웹후크로 전송
-    await fetch(targetWebhook, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, content, avatar_url })
-    });
-
-    res.sendStatus(200);
-});
+}
